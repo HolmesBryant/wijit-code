@@ -1,0 +1,146 @@
+<!DOCTYPE html>
+<html>
+<head>
+	<meta charset="utf-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<title>Wijit-Code Web Component</title>
+	<script type="module" src="src/wijit-code.js"></script>
+	<link rel="stylesheet" href="styles.css">
+	<style>
+		 wijit-code
+	    {
+	    	background-color: lightgray;
+	    	border-radius: .5rem;
+			font-weight: normal;
+			padding: .5rem;
+
+	    	@media (prefers-color-scheme: dark) {
+	    		background-color: dimgray;
+	    	}
+	    }
+
+	    wijit-code[inline]
+	    {
+	    	background: transparent;
+			padding: 0;
+	    }
+
+	</style>
+</head>
+<body>
+	<h1>Wijit-Code Web Component</h1>
+	<p>A custom element for displaying code snippets with consistent formatting and entity encoding.</p>
+	<p><strong>Note:</strong> The code must be properly indented in order for it to display as expected.</p>
+
+	<details>
+		<summary>Available Attributes</summary>
+		<section>
+			<ul>
+				<li><strong>inline</strong> (default: false) | Acceptable values [null, 'true', 'false']
+					<ul>
+						<li>Add this attribute if you want the code to appear inline instead of as a block of text. It does not require a value, but if you need to give it a value for some reason, use "true" or "false". "false" negates the effect as if the attribute were not present at all. If you need to adjust the css for inline code, the css selector is: <wijit-code inline>wijit-code[inline]{...}</wijit-code></li>
+					</ul>
+				</li>
+
+				<li><strong>tabsize</strong> (default: 2) | Acceptable values [any positive integer or any valid css length]
+					<ul>
+						<li>Add this attribute to customize the width of tab characters. Larger values result in increased indentation.</li>
+					</ul>
+				</li>
+			</ul>
+		</section>
+	</details>
+
+	<h2>Usage</h2>
+	<section>
+		<header><h3>Add the Script</h3></header>
+		<code>
+			&lt;script type="module" src="wijit-code.js">&lt;/script>
+		</code>
+	</section>
+
+	<section>
+		<header>
+			<h3>Wrap your code in a
+			<wijit-code inline><wijit-code></wijit-code></wijit-code>
+			 tag</h3>
+		</header>
+
+		<wijit-code>
+			<wijit-code >
+				<div>
+					<strong>Some HTML</strong>
+				</div>
+			</wijit-code >
+		</wijit-code>
+
+		<wijit-code>
+			<wijit-code >
+				function someFunction(value) {
+					return value;
+				}
+			</wijit-code >
+		</wijit-code>
+	</section>
+
+	<h2>Examples</h2>
+	<section>
+		<div>
+			<h3>Inline Code</h3>
+			<wijit-code>
+				<wijit-code inline > return "some value"; </wijit-code >
+			</wijit-code>
+		</div>
+	</section>
+
+	<section>
+		<div>
+			<h3>Custom Tab Size (integer)</h3>
+			<wijit-code tabsize="4">
+				<wijit-code tabsize="4" >
+					<article>
+						<header>
+							<h1>A Title</h1>
+						</header>
+						<p>Some text</p>
+					</article>
+				</wijit-code >
+			</wijit-code>
+		</div>
+
+		<div>
+			<h3>Custom Tab Size (css length)</h3>
+			<wijit-code tabsize=".5rem">
+				<wijit-code tabsize=".5rem" >
+					<article>
+						<header>
+							<h1>A Title</h1>
+						</header>
+						<p>Some text</p>
+					</article>
+				</wijit-code >
+			</wijit-code>
+		</div>
+
+		<div>
+			<h3>Spaces Instead of Tabs: not working</h3>
+			<wijit-code tab-size="8">
+              function someFunction(value) {
+               for (const x of {foo:'bar', baz:'boom'}) {
+                console.log(x);
+               }
+              }
+			</wijit-code>
+		</div>
+
+	</section>
+
+	<script>
+		const codes = document.querySelectorAll('code');
+		for (const code of codes) {
+			const spaces = 5;
+			code.textContent = code.innerHTML.replace(`/^\s{${spaces}}/gm`, "").trim();
+		}
+	</script>
+</body>
+</html>
