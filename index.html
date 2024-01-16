@@ -5,36 +5,74 @@
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Wijit-Code Web Component</title>
 	<script type="module" src="src/wijit-code.js"></script>
+	<script type="module" src="extra/wijit-form.js"></script>
 	<link rel="stylesheet" href="styles.css">
 	<style>
-		 wijit-code
-	    {
-	    	background-color: lightgray;
+
+
+		 wijit-code {
+	    	background-color: var(--bg1);
 	    	border-radius: .5rem;
 			font-weight: normal;
 			padding: .5rem;
-
-	    	@media (prefers-color-scheme: dark) {
-	    		background-color: dimgray;
-	    	}
 	    }
 
-	    wijit-code[inline]
-	    {
+	    wijit-code[inline] {
 	    	background: transparent;
 			padding: 0;
 	    }
+
+	    wijit-form textarea
+	    { min-height: 20rem; }
+
+	    fieldset wijit-code
+	    { width: 100%; }
 
 	</style>
 </head>
 <body>
 	<h1>Wijit-Code Web Component</h1>
-	<p>A custom element for displaying code snippets with consistent formatting and entity encoding.</p>
-	<p><strong>Note:</strong> The code must be properly indented in order for it to display as expected.</p>
+	<p>A custom element for displaying code snippets with consistent formatting.</p>
 
 	<details>
-		<summary>Available Attributes</summary>
+	<summary>Instructions</summary>
+
+		<h2>Usage</h2>
 		<section>
+			<header>
+				<ul>
+					<li><h3>Add the Script</h3>
+						<ul>
+							<li><code>
+							&lt;script type="module" src="wijit-code.js">&lt;/script>
+							</code></li>
+						</ul>
+					</li>
+					<li><h3>Wrap your code in a
+						<wijit-code inline><wijit-code></wijit-code></wijit-code>
+						 tag</h3>
+					</li>
+				</ul>
+			</header>
+
+			<wijit-code>
+				<wijit-code >
+					<div>
+						<strong>Some HTML</strong>
+					</div>
+				</wijit-code >
+			</wijit-code>
+
+			<wijit-code>
+				<wijit-code >
+					function someFunction(value) {
+						return value;
+					}
+				</wijit-code >
+			</wijit-code>
+		</section>
+		<section>
+			<h2>Available Attributes</h2>
 			<ul>
 				<li><strong>inline</strong> (default: false) | Acceptable values [null, 'true', 'false']
 					<ul>
@@ -51,43 +89,65 @@
 		</section>
 	</details>
 
-	<h2>Usage</h2>
-	<section>
-		<header><h3>Add the Script</h3></header>
-		<code>
-			&lt;script type="module" src="wijit-code.js">&lt;/script>
-		</code>
-	</section>
+	<h2>Demo</h2>
+	<!-- <section> -->
+		<wijit-form wait="false" success="false">
+				<section class="row center">
+					<div>
+						<label for="demo-tabsize">tabsize</label>
+						<input name="tabsize" value="2" id="demo-tabsize" list="demo-tabsizes" oninput="change(this, 'tabsize')">
+						<datalist id="demo-tabsizes">
+							<option>1</option>
+							<option>2</option>
+							<option>3</option>
+							<option>4</option>
+							<option>1rem</option>
+							<option>2rem</option>
+							<option>3rem</option>
+							<option>4rem</option>
+							<option>1px</option>
+							<option>2px</option>
+							<option>3px</option>
+							<option>4px</option>
+						</datalist>
 
-	<section>
-		<header>
-			<h3>Wrap your code in a
-			<wijit-code inline><wijit-code></wijit-code></wijit-code>
-			 tag</h3>
-		</header>
-
-		<wijit-code>
-			<wijit-code >
-				<div>
-					<strong>Some HTML</strong>
-				</div>
-			</wijit-code >
-		</wijit-code>
-
-		<wijit-code>
-			<wijit-code >
-				function someFunction(value) {
-					return value;
-				}
-			</wijit-code >
-		</wijit-code>
-	</section>
+					</div>
+					<div>
+						<label for="demo-inline">inline</label>
+						<input type="checkbox" name="inline" id="demo-inline" onchange="change(this, 'inline')">
+					</div>
+				</section>
+				<section class="row">
+					<div>
+						<label for="demo-sample">Sample Code</label>
+						<textarea name="sample" id="demo-sample" data-tabs="true"] wrap="hard">
+							function foo (value) {
+	for (const bar of baz) {
+		for (const boom of bam) {
+			if (bar === boom) {
+				value = bam;
+			} else {
+				value = baz;
+			}
+		}
+	}
+}</textarea>
+					</div>
+					<fieldset>
+						<legend>Result</legend>
+						<div>
+							<wijit-code id="result"></wijit-code>
+						</div>
+					</fieldset>
+				</section>
+		</wijit-form>
+	<!-- </section> -->
 
 	<h2>Examples</h2>
 	<section>
 		<div>
 			<h3>Inline Code</h3>
-			<wijit-code>
+			<wijit-code inline>
 				<wijit-code inline > return "some value"; </wijit-code >
 			</wijit-code>
 		</div>
@@ -121,18 +181,101 @@
 				</wijit-code >
 			</wijit-code>
 		</div>
-
-		<div>
-			<h3>Spaces Instead of Tabs: not working</h3>
-			<wijit-code tab-size="8">
-              function someFunction(value) {
-               for (const x of {foo:'bar', baz:'boom'}) {
-                console.log(x);
-               }
-              }
-			</wijit-code>
-		</div>
-
 	</section>
+
+	<section>
+		<style>
+			foo {
+				border: 1px solid orange;
+				display: block;
+				width: 100%;
+				overflow: auto;
+			}
+
+			foo section {
+				display: flex;
+				flex-direction: row;
+				flex-wrap: wrap;
+				gap: .5rem;
+				justify-content: space-evenly;
+			}
+
+			foo fieldset {
+			    box-sizing: border-box;
+			    display: flex;
+			    flex: 1;
+			    flex-direction: column;
+			    flex-wrap: wrap;
+			    gap: 0.5rem;
+			}
+
+			foo div {
+			    align-items: stretch;
+			    box-sizing: border-box;
+			    display: flex;
+			    flex: 1;
+			    flex-direction: column;
+			    flex-wrap: wrap;
+			    gap: 0.5rem;
+			    justify-content: center;
+			    overflow: auto;
+			}
+
+		</style>
+		<wijit-form>
+			<section>
+				<div>
+					<pre>
+						<code>
+							function foo (value) { for (const bar of baz) { for (const boom of bam) { if (bar === boom) { value = bam; } else { value = baz; } } } }
+
+						</code>
+					</pre>
+				</div>
+			</section>
+		</wijit-form>
+	</section>
+
+	<script>
+		const textarea = document.querySelector('textarea[data-tabs="true"]');
+		const result = document.querySelector('#result');
+		textarea.value = textarea.value.replace(/\t/gm, '');
+		result.innerHTML = textarea.value;
+
+		textarea.addEventListener ('input', (event) => {
+			result.innerHTML = event.target.value;
+		});
+
+		textarea.addEventListener('keydown', (event) => {
+			if (event.key === 'Tab') {
+				event.preventDefault();
+				const ta = event.target;
+				const start = ta.selectionStart;
+				const end = ta.selectionEnd;
+				const before = ta.value.substring(0, start);
+				const after = ta.value.substring(end);
+				ta.value = before + "\t" + after;
+				ta.selectionStart = ta.selectionEnd = start + 1;
+				const inputEvent = new Event ('input');
+				ta.dispatchEvent(inputEvent);
+    		}
+		});
+
+		function change(elem, attr) {
+			let value = elem.value;
+			if (elem.type === 'checkbox' || elem.type === 'radio') {
+				value = (elem.checked) ? 'true' : 'false';
+			}
+
+			result.setAttribute(attr, value);
+		}
+
+		const inputs = document.querySelectorAll('input');
+		for (const input of inputs) {
+			input.addEventListener('focus', event => {
+				event.target.select();
+			})
+		}
+	</script>
 </body>
 </html>

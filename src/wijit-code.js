@@ -16,6 +16,7 @@
 export default class WijitCode extends HTMLElement {
 	#inline = false;
 	#tabsize = 2;
+	#firstPaint = true;
 	static observedAttributes = ['inline', 'tabsize'];
 
 	/**
@@ -28,25 +29,23 @@ export default class WijitCode extends HTMLElement {
 		this.shadowRoot.innerHTML = `
 			<style>
 				:host {
-					display: inline-block;
-					width: max-content;
 					--tabsize: ${this.tabsize};
+					display: inline-block;
 				}
 
 				pre {
 					display: block;
 					tab-size: var(--tabsize);
-					width: max-content;
 				}
 
 				.inline {
-					display: inline;
-					white-space: nowrap;
 					margin: 0;
+					overflow: auto;
+					white-space: nowrap;
 				}
 			</style>
 
-			<pre><slot></slot></pre>
+			<pre><code><slot></slot></code></pre>
 		`;
 	}
 
@@ -54,14 +53,21 @@ export default class WijitCode extends HTMLElement {
 	 * @function connectedCallback
 	 * @description Called when the element is connected to the DOM.
 	 * - Adjusts indentation to match surrounding text.
-	 * - Encodes HTML entities within the code content.
 	 */
 	connectedCallback() {
-		const pre = this.shadowRoot.querySelector('pre');
+		this.pre = this.shadowRoot.querySelector('pre');
+		const slot = this.shadowRoot.querySelector('slot');
 		const result = this.resetSpaces(this);
 
-		if (this.inline) pre.classList.add('inline');
+		if (this.inline) this.pre.classList.add('inline');
 		this.textContent = result;
+
+		slot.addEventListener('slotchange', event => {
+			if (!this.#firstPaint) {
+				this.textContent = this.resetSpaces(this);
+			}
+			this.#firstPaint = false;
+		});
 	}
 
 	attributeChangedCallback (attr, oldval, newval) {
@@ -69,9 +75,10 @@ export default class WijitCode extends HTMLElement {
 	}
 
 	resetSpaces (container) {
-		let i = 0;
-		// const html = container.innerHTML.trim();
-		const html = container.innerHTML.replace(/^\s+/gm, (spaces) => '\t'.repeat(spaces.length)).trim();
+		const html = container.innerHTML.replace(
+			/^\s+/gm,
+			(spaces) => '\t'.repeat(spaces.length)
+		).trim();
 		const lines = html.split("\n");
 		const spaces = lines.at(-1).match(/^\s*/)[0].length;
 		const regex = new RegExp(`^\\s{${spaces}}`, "g");
@@ -84,11 +91,16 @@ export default class WijitCode extends HTMLElement {
 		case '':
 		case 'true':
 		case true:
-			this.#inline = true;
+			value = true;
+			if (this.pre) this.pre.classList.add('inline');
 			break;
 		default:
-			this.#inline = false;
+			value = false;
+			this.removeAttribute('inline');
+			if (this.pre) this.pre.classList.remove('inline');
+			break;
 		}
+		this.#inline = value;
 	}
 
 	get tabsize () { return this.#tabsize; }
