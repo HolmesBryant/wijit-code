@@ -6,11 +6,16 @@
 	<title>Wijit-Code Web Component</title>
 	<script type="module" src="src/wijit-code.js"></script>
 	<script type="module" src="extra/wijit-form.js"></script>
+	<!-- todo
+		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/dark.min.css">
+		<script type="module">
+			import hljs from 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/es/highlight.min.js';
+			hljs.highlightAll();
+		</script>
+	-->
 	<link rel="stylesheet" href="styles.css">
 	<style>
-
-
-		 wijit-code {
+		wijit-code {
 	    	background-color: var(--bg1);
 	    	border-radius: .5rem;
 			font-weight: normal;
@@ -18,15 +23,15 @@
 	    }
 
 	    wijit-code[inline] {
-	    	background: transparent;
-			padding: 0;
+			padding: 0 .5rem;
 	    }
 
-	    wijit-form textarea
-	    { min-height: 20rem; }
-
-	    fieldset wijit-code
+	    fieldset > wijit-code
 	    { width: 100%; }
+
+	    wijit-form textarea {
+			min-height: 22rem;
+		}
 
 	</style>
 </head>
@@ -80,9 +85,9 @@
 					</ul>
 				</li>
 
-				<li><strong>tabsize</strong> (default: 2) | Acceptable values [any positive integer or any valid css length]
+				<li><strong>tabsize</strong> (default: 2) | Acceptable values [any positive integer or most css lengths such as 4px, 4rem etc]
 					<ul>
-						<li>Add this attribute to customize the width of tab characters. Larger values result in increased indentation.</li>
+						<li>Add this attribute to customize the degree of indentation.</li>
 					</ul>
 				</li>
 			</ul>
@@ -90,72 +95,91 @@
 	</details>
 
 	<h2>Demo</h2>
-	<!-- <section> -->
-		<wijit-form wait="false" success="false">
-				<section class="row center">
-					<div>
-						<label for="demo-tabsize">tabsize</label>
-						<input name="tabsize" value="2" id="demo-tabsize" list="demo-tabsizes" oninput="change(this, 'tabsize')">
-						<datalist id="demo-tabsizes">
-							<option>1</option>
-							<option>2</option>
-							<option>3</option>
-							<option>4</option>
-							<option>1rem</option>
-							<option>2rem</option>
-							<option>3rem</option>
-							<option>4rem</option>
-							<option>1px</option>
-							<option>2px</option>
-							<option>3px</option>
-							<option>4px</option>
-						</datalist>
+	<wijit-form wait="false" success="false">
+		<section class="row center">
+			<div>
+				<label for="demo-tabsize">tabsize</label>
+				<input name="tabsize" value="2" id="demo-tabsize" list="demo-tabsizes" oninput="change(this, 'tabsize')">
+				<datalist id="demo-tabsizes">
+					<option>1</option>
+					<option>2</option>
+					<option>3</option>
+					<option>4</option>
+					<option>1rem</option>
+					<option>2rem</option>
+					<option>3rem</option>
+					<option>4rem</option>
+					<option>1px</option>
+					<option>2px</option>
+					<option>3px</option>
+					<option>4px</option>
+				</datalist>
 
-					</div>
-					<div>
-						<label for="demo-inline">inline</label>
-						<input type="checkbox" name="inline" id="demo-inline" onchange="change(this, 'inline')">
-					</div>
-				</section>
-				<section class="row">
-					<div>
-						<label for="demo-sample">Sample Code</label>
-						<textarea name="sample" id="demo-sample" data-tabs="true"] wrap="hard">
-							function foo (value) {
-	for (const bar of baz) {
-		for (const boom of bam) {
-			if (bar === boom) {
-				value = bam;
-			} else {
-				value = baz;
-			}
-		}
-	}
-}</textarea>
-					</div>
-					<fieldset>
-						<legend>Result</legend>
-						<div>
-							<wijit-code id="result"></wijit-code>
-						</div>
-					</fieldset>
-				</section>
-		</wijit-form>
-	<!-- </section> -->
+			</div>
+			<div>
+				<label for="demo-inline">inline</label>
+				<input type="checkbox" name="inline" id="demo-inline" onchange="change(this, 'inline')">
+			</div>
+		</section>
+		<section class="row">
+			<div>
+				<label for="demo-ta">Sample Code</label>
+				<textarea name="sample" id="demo-ta">
+function level1() {
+ function level2() {
+  function level3() {
+   function level4() {
+    function level5() {
+     console.log("5th nested level.");
+    }
+    level5();
+   }
+   level4();
+  }
+  level3();
+ }
+ level2();
+}
+level1();
+				</textarea>
+			</div>
+			<fieldset>
+				<legend>Result</legend>
+				<wijit-code id="demo-result"></wijit-code>
+			</fieldset>
+		</section>
+	</wijit-form>
 
-	<h2>Examples</h2>
 	<section>
+		<header><h2>Inline Code</h2></header>
 		<div>
-			<h3>Inline Code</h3>
+			<wijit-code>
+				<wijit-code inline="true" >...</wijit-code >
+			</wijit-code>
+		</div>
+		<div>
+			<p>Some text <wijit-code inline> function foo() {}</wijit-code> some more text.</p>
+		</div>
+		<div class="row">
 			<wijit-code inline>
-				<wijit-code inline > return "some value"; </wijit-code >
+				function foo (baz, bam) {
+					for (const bar of baz) {
+						for (const boom of bam) {
+							if (bar === boom) {
+								value = bam;
+							} else {
+								value = baz;
+							}
+						}
+					}
+				}
 			</wijit-code>
 		</div>
 	</section>
 
-	<section>
+	<section class="row">
 		<div>
-			<h3>Custom Tab Size (integer)</h3>
+			<header><h3>Custom Tab Size (integer)</h3></header>
 			<wijit-code tabsize="4">
 				<wijit-code tabsize="4" >
 					<article>
@@ -169,7 +193,7 @@
 		</div>
 
 		<div>
-			<h3>Custom Tab Size (css length)</h3>
+			<header><h3>Custom Tab Size (css length)</h3></header>
 			<wijit-code tabsize=".5rem">
 				<wijit-code tabsize=".5rem" >
 					<article>
@@ -183,69 +207,19 @@
 		</div>
 	</section>
 
-	<section>
-		<style>
-			foo {
-				border: 1px solid orange;
-				display: block;
-				width: 100%;
-				overflow: auto;
-			}
-
-			foo section {
-				display: flex;
-				flex-direction: row;
-				flex-wrap: wrap;
-				gap: .5rem;
-				justify-content: space-evenly;
-			}
-
-			foo fieldset {
-			    box-sizing: border-box;
-			    display: flex;
-			    flex: 1;
-			    flex-direction: column;
-			    flex-wrap: wrap;
-			    gap: 0.5rem;
-			}
-
-			foo div {
-			    align-items: stretch;
-			    box-sizing: border-box;
-			    display: flex;
-			    flex: 1;
-			    flex-direction: column;
-			    flex-wrap: wrap;
-			    gap: 0.5rem;
-			    justify-content: center;
-			    overflow: auto;
-			}
-
-		</style>
-		<wijit-form>
-			<section>
-				<div>
-					<pre>
-						<code>
-							function foo (value) { for (const bar of baz) { for (const boom of bam) { if (bar === boom) { value = bam; } else { value = baz; } } } }
-
-						</code>
-					</pre>
-				</div>
-			</section>
-		</wijit-form>
-	</section>
-
 	<script>
-		const textarea = document.querySelector('textarea[data-tabs="true"]');
-		const result = document.querySelector('#result');
+		const textarea = document.querySelector('textarea#demo-ta');
+		const demoResult = document.querySelector('wijit-code#demo-result');
 		textarea.value = textarea.value.replace(/\t/gm, '');
-		result.innerHTML = textarea.value;
+		demoResult.textContent = textarea.value;
 
+		// Modify content of #demo-result when textarea changes.
+		// Since #demo-result is a wijit-code custom element, this triggers the component.
 		textarea.addEventListener ('input', (event) => {
-			result.innerHTML = event.target.value;
+			demoResult.innerHTML = event.target.value;
 		});
 
+		// Enable tabbing inside of textarea
 		textarea.addEventListener('keydown', (event) => {
 			if (event.key === 'Tab') {
 				event.preventDefault();
@@ -261,15 +235,18 @@
     		}
 		});
 
+		// Change attribute value of demoResult element.
+		// "#demoResult" is a wijit-code custom element.
 		function change(elem, attr) {
 			let value = elem.value;
 			if (elem.type === 'checkbox' || elem.type === 'radio') {
 				value = (elem.checked) ? 'true' : 'false';
 			}
 
-			result.setAttribute(attr, value);
+			demoResult.setAttribute(attr, value);
 		}
 
+		// When user focucus an input element, select the contents of the input
 		const inputs = document.querySelectorAll('input');
 		for (const input of inputs) {
 			input.addEventListener('focus', event => {

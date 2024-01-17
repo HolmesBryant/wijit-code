@@ -1,6 +1,6 @@
 # Wijit-Code Web Component
 
-A custom element for displaying code snippets with consistent formatting and entity encoding.
+A custom element for displaying code snippets with consistent formatting.
 
 Demo: [https://holmesbryant.github.io/wijit-code/](https://holmesbryant.github.io/wijit-code/)
 
@@ -17,8 +17,8 @@ Demo: [https://holmesbryant.github.io/wijit-code/](https://holmesbryant.github.i
 - **inline** (default: false) | Acceptable values [null, 'true', 'false']
 	- Add this attribute if you want the code to appear inline instead of as a block of text. It does not require a value, but if you need to give it a value for some reason, use "true" or "false". "false" negates the effect as if the attribute were not present at all. If you need to adjust the css for inline code, the css selector is: `wijit-code[inline]{...}`
 
-- **tabsize** (default: 2) | Acceptable values [any positive integer or any valid css length]
-	- Add this attribute to customize the width of tab characters. Larger values result in increased indentation.
+- **tabsize** (default: 2) | Acceptable values [any positive integer or most css length values such as 4px, 2rem etc]
+	- Add this attribute to customize the degree of indentation.
 
 
 ## Usage ##
@@ -27,7 +27,7 @@ Demo: [https://holmesbryant.github.io/wijit-code/](https://holmesbryant.github.i
 
 	<script type="module" src="wijit-code.js"></script>
 
-### Wrap your code in a `<wijit-code></wijit-code>` tag ##
+### Wrap your code in a `<wijit-code>...</wijit-code>` tag ##
 
 	<wijit-code>
 		<div>
@@ -45,24 +45,14 @@ Demo: [https://holmesbryant.github.io/wijit-code/](https://holmesbryant.github.i
 
 ### Inline Code ###
 
-	<wijit-code inline> return "some value"; </wijit-code>
+	<wijit-code inline>...</wijit-code>
 
 ### Custom Tab Size (integer) ###
 	<wijit-code tabsize="4">
-		<article>
-			<header>
-				<h1>Title</h1>
-			</header>
-			<p>Some text</p>
-		</article>
+		...
 	</wijit-code>
 
 ### Custom Tab Size (css length) ###
 	<wijit-code tabsize=".5rem">
-		<article>
-			<header>
-				<h1>Title</h1>
-			</header>
-			<p>Some text</p>
-		</article>
+		...
 	</wijit-code>

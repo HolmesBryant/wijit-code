@@ -781,8 +781,8 @@ export default class WijitForm extends HTMLElement {
 		const style = `
 			<style id="wijit-form-css">
 				html, body * { box-sizing: border-box; }
-
 				@layer wijit-form {
+
 					wijit-form {
 					    --bg1: rgb(250,250,250);
 					    --bg2: rgb(245,245,245);
@@ -806,6 +806,7 @@ export default class WijitForm extends HTMLElement {
 
 					    background-color: var(--bg1);
 					    border-radius: 10px;
+					    color: var(--text);
 					    display: inline-block;
 					    padding: 1rem;
 					    width: 100%;
@@ -930,13 +931,13 @@ export default class WijitForm extends HTMLElement {
 					    wijit-form label.required:after
 					    { color: var(--fail) }
 
-					    wijit-form button,
+					    /*wijit-form button,*/
 					    wijit-form input,
-					    wijit-form fieldset,
-					    wijit-form label,
-					    wijit-form legend,
-					    wijit-form option,
-					    wijit-form select,
+					    /*wijit-form fieldset,*/
+					    /*wijit-form label,*/
+					    /*wijit-form legend,*/
+					    /*wijit-form option,*/
+					    /*wijit-form select,*/
 					    wijit-form textarea
 					    { color: var(--text); }
 
@@ -1023,6 +1024,7 @@ export default class WijitForm extends HTMLElement {
 					    	margin: 1rem;
 					    }
 
+
 						wijit-form fieldset,
 						wijit-form section {
 							display: flex;
@@ -1030,6 +1032,7 @@ export default class WijitForm extends HTMLElement {
 							flex-wrap: wrap;
 							gap: 0.5rem;
 							overflow: auto;
+						    min-inline-size: 200px;
 						}
 
 						wijit-form div {
@@ -1051,8 +1054,7 @@ export default class WijitForm extends HTMLElement {
 
 						wijit-form button,
 						wijit-form input,
-						wijit-form select,
-						wijit-form textarea {
+						wijit-form select {
 					    	min-height: var(--min);
 					    	min-width: var(--min);
 					        padding: var(--pad);
@@ -1185,9 +1187,7 @@ export default class WijitForm extends HTMLElement {
 
 						wijit-form .start > *
 						{ flex: 0; }
-
-
-				} /* @layer */
+					} /* @layer */
             </style>
 		`;
 

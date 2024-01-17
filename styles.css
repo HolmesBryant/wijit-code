@@ -70,23 +70,33 @@ body {
 	{ margin-left: 1rem; }
 
 	header
-	{ flex-basis: 100%; }
+	{ flex: 0; }
 
 	li
 	{ margin-bottom: 1rem; }
 
-	ul, ol {
-		margin: 0;
-		padding: 1rem;
-	}
+	ul, ol
+	{ margin: 0; }
 
 	section {
 		display: flex;
-		flex-wrap: wrap;
+		flex-direction: column;
+		flex-wrap: nowrap;
 		gap: 1rem;
-		justify-content: space-evenly;
 		margin: 0 auto 1rem auto;
 		padding: 1rem;
+	}
+
+	section > * {
+		display: flex;
+		flex-direction: column;
+		flex: 1;
+	}
+
+	.row {
+		flex-direction: row;
+		justify-content: space-around;
+		overflow: auto;
 	}
 
 	summary {
@@ -98,3 +108,5 @@ body {
 
 	details[open] > summary
 	{ margin-bottom: 1rem; }
+
+} /* @layer */

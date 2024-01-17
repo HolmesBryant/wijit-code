@@ -31,6 +31,8 @@ export default class WijitCode extends HTMLElement {
 				:host {
 					--tabsize: ${this.tabsize};
 					display: inline-block;
+					overflow: auto;
+					vertical-align: middle;
 				}
 
 				pre {
@@ -76,7 +78,7 @@ export default class WijitCode extends HTMLElement {
 
 	resetSpaces (container) {
 		const html = container.innerHTML.replace(
-			/^\s+/gm,
+			/^ +/gm,
 			(spaces) => '\t'.repeat(spaces.length)
 		).trim();
 		const lines = html.split("\n");
