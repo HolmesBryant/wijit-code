@@ -6,13 +6,12 @@
 	<title>Wijit-Code Web Component</title>
 	<script type="module" src="src/wijit-code.js"></script>
 	<script type="module" src="extra/wijit-form.js"></script>
-	<!-- todo
-		<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/dark.min.css">
-		<script type="module">
-			import hljs from 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/es/highlight.min.js';
-			hljs.highlightAll();
-		</script>
-	-->
+	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/dark.min.css">
+	<script defer type="module">
+		import hljs from 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/es/highlight.min.js';
+		hljs.highlightAll();
+	</script>
+
 	<link rel="stylesheet" href="styles.css">
 	<style>
 		wijit-code {
@@ -180,7 +179,7 @@ level1();
 	<section class="row">
 		<div>
 			<header><h3>Custom Tab Size (integer)</h3></header>
-			<wijit-code tabsize="4">
+			<wijit-code html tabsize="4">
 				<wijit-code tabsize="4" >
 					<article>
 						<header>
@@ -194,7 +193,7 @@ level1();
 
 		<div>
 			<header><h3>Custom Tab Size (css length)</h3></header>
-			<wijit-code tabsize=".5rem">
+			<wijit-code html tabsize=".5rem">
 				<wijit-code tabsize=".5rem" >
 					<article>
 						<header>
@@ -205,6 +204,18 @@ level1();
 				</wijit-code >
 			</wijit-code>
 		</div>
+	</section>
+	<section>
+		<header><h3>Syntax Highlighting</h3></header>
+		<wijit-code highlight>
+			function foo (value) {
+				let ret = false;
+				if (value === 'foo') {
+					ret = true;
+				}
+				return ret;
+			}
+		</wijit-code>
 	</section>
 
 	<script>
