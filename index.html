@@ -6,15 +6,11 @@
 	<title>Wijit-Code Web Component</title>
 	<script type="module" src="src/wijit-code.js"></script>
 	<script type="module" src="extra/wijit-form.js"></script>
-	<link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/styles/dark.min.css">
-	<script defer type="module">
-		import hljs from 'https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.9.0/es/highlight.min.js';
-		hljs.highlightAll();
-	</script>
-
 	<link rel="stylesheet" href="styles.css">
+
 	<style>
 		wijit-code {
+			--tabsize: 2;
 	    	background-color: var(--bg1);
 	    	border-radius: .5rem;
 			font-weight: normal;
@@ -22,16 +18,21 @@
 	    }
 
 	    wijit-code[inline] {
-			padding: 0 .5rem;
+			overflow: auto;
+	    	padding: .25rem;
 	    }
+	</style>
 
-	    fieldset > wijit-code
-	    { width: 100%; }
-
-	    wijit-form textarea {
-			min-height: 22rem;
+	<style>
+		my-code::highlight() {
+		  background-color: #f5f5f5;
+		  color: #333;
 		}
 
+		my-code::highlight-specific() {
+		  background-color: yellow;
+		  font-weight: bold;
+		}
 	</style>
 </head>
 <body>
@@ -144,15 +145,16 @@ level1();
 			</div>
 			<fieldset>
 				<legend>Result</legend>
-				<wijit-code id="demo-result"></wijit-code>
+				<wijit-code id="demo-result">
+				</wijit-code>
 			</fieldset>
 		</section>
 	</wijit-form>
 
 	<section>
 		<header><h2>Inline Code</h2></header>
-		<div>
-			<wijit-code>
+		<div class="row">
+			<wijit-code inline>
 				<wijit-code inline="true" >...</wijit-code >
 			</wijit-code>
 		</div>
@@ -179,7 +181,7 @@ level1();
 	<section class="row">
 		<div>
 			<header><h3>Custom Tab Size (integer)</h3></header>
-			<wijit-code html tabsize="4">
+			<wijit-code tabsize="4">
 				<wijit-code tabsize="4" >
 					<article>
 						<header>
@@ -205,27 +207,15 @@ level1();
 			</wijit-code>
 		</div>
 	</section>
-	<section>
-		<header><h3>Syntax Highlighting</h3></header>
-		<wijit-code highlight>
-			function foo (value) {
-				let ret = false;
-				if (value === 'foo') {
-					ret = true;
-				}
-				return ret;
-			}
-		</wijit-code>
-	</section>
 
 	<script>
 		const textarea = document.querySelector('textarea#demo-ta');
 		const demoResult = document.querySelector('wijit-code#demo-result');
-		textarea.value = textarea.value.replace(/\t/gm, '');
+		const inputs = document.querySelectorAll('input');
 		demoResult.textContent = textarea.value;
 
 		// Modify content of #demo-result when textarea changes.
-		// Since #demo-result is a wijit-code custom element, this triggers the component.
+		// Since #demo-result is a wijit-code custom element, this automatically triggers an update
 		textarea.addEventListener ('input', (event) => {
 			demoResult.innerHTML = event.target.value;
 		});
@@ -257,11 +247,19 @@ level1();
 			demoResult.setAttribute(attr, value);
 		}
 
-		// When user focucus an input element, select the contents of the input
-		const inputs = document.querySelectorAll('input');
 		for (const input of inputs) {
 			input.addEventListener('focus', event => {
 				event.target.select();
+			});
+
+			input.addEventListener('click', event => {
+				event.target.select();
+			});
+
+			input.addEventListener('keydown', event => {
+				if (event.key === "Enter") {
+					event.target.select();
+				}
 			})
 		}
 	</script>
