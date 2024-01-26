@@ -13,7 +13,7 @@
  *   }
  * </wijit-code>
  */
-export class WijitCode extends HTMLElement {
+export default class WijitCode extends HTMLElement {
 	/**
 	 * @private
 	 * @type string
@@ -27,6 +27,8 @@ export class WijitCode extends HTMLElement {
 	 * @description Whether to add color highlights.
 	 */
 	#highlight = false;
+
+	highlights = new Map();
 
 	/**
 	 * @private
@@ -89,7 +91,7 @@ export class WijitCode extends HTMLElement {
 				}
 			</style>
 
-			<pre><slot></slot></pre>
+			<pre><code><slot></slot></code></pre>
 		`;
 	}
 
@@ -108,6 +110,10 @@ export class WijitCode extends HTMLElement {
 		slot.addEventListener('slotchange', event => {
 			this.updateContentIfNeeded();
 	    }, this.abortController.signal);
+	}
+
+	test () {
+
 	}
 
 	/**
@@ -144,10 +150,6 @@ export class WijitCode extends HTMLElement {
 		}
 	}
 
-	highlightCode (string, highlighter) {
-		console.log('highlight')
-	}
-
 	/**
 	 * @method resetSpaces
 	 * @param {HTMLElement} container - The element containing the code to be formatted.
@@ -175,6 +177,84 @@ export class WijitCode extends HTMLElement {
 		const regex = new RegExp(`^\\s{${spaces}}`, "g");
 		return lines.map (line => line.replace(regex, '')).join("\n");
 	}
+
+	highlightCode (obj = {}, content) {
+		content = content || this.textContent;
+        let ranges = [];
+        for (const prop of Object.keys (obj)) {
+            const value = obj[prop];
+
+            if (!value) {
+            	continue;
+            } else if (Array.isArray (value)) {
+                value.forEach (word => {
+                    const regex = new RegExp(`\\b${word}\\b`, "g");
+                    ranges.push (this.setRanges(regex));
+                });
+
+                ranges = ranges.filter (sub => sub.length > 0).flat();
+                this.setHighlights (ranges, prop);
+            } else if (value instanceof Function) {
+                ranges = value(content, this.childNodes[0]);
+                this.setHighlights(ranges, prop);
+            } else if (value instanceof RegExp) {
+                ranges = this.setRanges (value);
+                this.setHighlights(ranges, prop);
+            } else {
+                console.error (`Invalid syntax definition for ${prop}: `, `"${value}"`);
+            }
+        }
+    }
+
+    setRanges (regex) {
+        const content = this.textContent;
+        const node = this.childNodes[0];
+        const ranges = [];
+        const matches = content.matchAll(regex);
+
+        for (const match of matches) {
+            if (!match[0]) continue;
+            const start = match.index;
+            const range = new Range();
+            range.setStart (node, start);
+            range.setEnd (node, start + match[0].length);
+            ranges.push (range);
+        }
+
+        return ranges;
+    }
+
+    setHighlights (ranges = [], type = '') {
+        const highlight = new Highlight(...ranges);
+        CSS.highlights.set (type, highlight);
+        this.highlights.set (type, highlight);
+    }
+
+	get highlight () { return this.#highlight; }
+
+    set highlight (value) {
+    	if (typeof Highlight === 'undefined') {
+    		console.error('Browser does not support CSS Custom Highlight API');
+    		return;
+    	}
+
+    	if (!value) {
+    		console.error ('No highlight value');
+    		return;
+    	}
+
+        if (value instanceof Object) {
+            this.#highlight = value;
+            this.highlight (value);
+        } else {
+        	value = value.startsWith(("http", ".", "/")) ? value : `./syntax.${value}.js`;
+            import (value)
+            .then (response => {
+                this.#highlight = response.default;
+                this.highlightCode (response.default)
+            });
+        }
+    }
 
 	/**
 	 * @method get inline
@@ -226,166 +306,4 @@ export class WijitCode extends HTMLElement {
 	}
 }
 
-export class WijitTa extends HTMLTextAreaElement {
-	#highlight;
-	abortController = new AbortController();
-	static observedAttributes = ['highlight'];
-
-	/**
-	 * @constructor
-	 * @description Creates a new WijitCode instance and sets up its shadow DOM.
-	 */
-	constructor() {
-		super();
-		if (!document.head.querySelector('#wijit-textarea-css')) {
-			document.head.prepend(this.getCss());
-		}
-	}
-
-	/**
-	 * @method connectedCallback
-	 * @description Called when the element is inserted into the DOM.
-	 * @remarks Perform initial setup and establish event listeners after the element is connected.
-	 */
-	connectedCallback() {
-
-		// console.log(this.innerHTML);
-	}
-
-	/**
-	 * @method attributeChangedCallback
-	 * @description Called when attributes change.
-	 */
-	attributeChangedCallback (attr, oldval, newval) {
-		this[attr] = newval;
-	}
-
-	/**
-	 * @method disconnectedCallback
-	 * @description Called when the element is removed from the DOM.
-	 * @remarks Clean up resources and remove event listeners.
-	 */
-	disconnectedCallback () {
-		this.abortController.abort();
-	}
-
-	highlightCode (highlighter, element) {
-		element = element || this;
-		highlighter = highlighter || this.highlight;
-		const h = new Highlighter(element, highlighter);
-		h.highlightCode();
-	}
-
-	getCss () {
-		const style = document.createElement('style');
-		style.id = 'wijit-textarea-css';
-		style.textContent = `
-			textarea[is="wijit-ta"] {
-				background: transparent;
-				color: inherit;
-				overflow-x: auto;
-				white-space: nowrap;
-			}
-		`;
-		return style;
-	}
-
-	get highlight () { return this.#highlight; }
-
-    set highlight (value) {
-    	this.#highlight = value;
-    	const highlighter = new Highlighter(this, value);
-    	highlighter.highlight(value);
-    }
-
-
-}
-
-export class Highlighter {
-	element;
-	highlights = new Map();
-
-	constructor (element, highlighter) {
-		this.element = element;
-		this.highlighter = highlighter;
-	}
-
-	highlight (syntax, string) {
-		string = string || this.element.textContent;
-
-		if (typeof window.Highlight === 'undefined') {
-    		console.error('Browser does not support CSS Custom Highlight API');
-    		return;
-    	}
-
-        if (syntax instanceof Object) {
-            this.highlightCode (syntax);
-        } else {
-        	syntax = syntax.startsWith(("http", ".", "/")) ? syntax : `./syntax.${syntax}.js`;
-            import (syntax)
-            .then (response => {
-            	syntax = response.default;
-                this.highlightCode (syntax)
-            });
-        }
-
-        return syntax;
-	}
-
-	highlightCode (syntax, content) {
-		content = content || this.element.textContent;
-        let ranges = [];
-        for (const prop of Object.keys (syntax)) {
-            const value = syntax[prop];
-
-            if (!value) {
-            	continue;
-            } else if (Array.isArray (value)) {
-                value.forEach (word => {
-                    const regex = new RegExp(`\\b${word}\\b`, "g");
-                    ranges.push (this.setRanges(regex));
-                });
-
-                ranges = ranges.filter (sub => sub.length > 0).flat();
-                this.setHighlights (ranges, prop);
-            } else if (value instanceof Function) {
-                ranges = value(content, this.element.childNodes[0]);
-                this.setHighlights(ranges, prop);
-            } else if (value instanceof RegExp) {
-                ranges = this.setRanges (value);
-                this.setHighlights(ranges, prop);
-            } else {
-                console.error (`Invalid syntax definition for ${prop}: `, `"${value}"`);
-            }
-        }
-
-        return ranges;
-    }
-
-    setRanges (regex, string) {
-        const content = string || this.element.textContent;
-        const node = this.element.childNodes[0];
-        const ranges = [];
-        const matches = content.matchAll(regex);
-
-        for (const match of matches) {
-            if (!match[0]) continue;
-            const start = match.index;
-            const range = new Range();
-            range.setStart (node, start);
-            range.setEnd (node, start + match[0].length);
-            ranges.push (range);
-        }
-
-        return ranges;
-    }
-
-    setHighlights (ranges = [], type = '') {
-        const highlight = new Highlight(...ranges);
-        CSS.highlights.set (type, highlight);
-        this.highlights.set (type, highlight);
-    }
-}
-
 document.addEventListener('DOMContentLoaded', customElements.define('wijit-code', WijitCode));
-document.addEventListener('DOMContentLoaded', customElements.define('wijit-ta', WijitTa, {extends:'textarea'}));
