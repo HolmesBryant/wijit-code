@@ -14,16 +14,12 @@
  * </wijit-code>
  */
 export class WijitCode extends HTMLElement {
-	contentNode;
-
 	/**
 	 * @private
 	 * @type boolean
 	 * @description Whether to add color highlights.
 	 */
 	#highlight = false;
-
-	highlighter;
 
 	/**
 	 * @private
@@ -44,14 +40,14 @@ export class WijitCode extends HTMLElement {
 	 * @type boolean
 	 * @description Tracks if a slot change requires content update.
 	 */
-	#needsUpdate = false;
+	#needSlotChange = false;
 
 	/**
 	 * @private
-	 * @type MutationObserver
-	 * @description Used to manage mutation events.
+	 * @type AbortController
+	 * @description Used to manage event listeners and prevent memory leaks.
 	 */
-	observer;
+	abortController = new AbortController();
 
 	/**
 	 * @static
@@ -86,8 +82,7 @@ export class WijitCode extends HTMLElement {
 				}
 			</style>
 
-			<pre contenteditable spellcheck="false"></pre>
-			<slot></slot>
+			<pre><slot></slot></pre>
 		`;
 	}
 
@@ -97,35 +92,16 @@ export class WijitCode extends HTMLElement {
 	 * @remarks Perform initial setup and establish event listeners after the element is connected.
 	 */
 	connectedCallback() {
-		const pre = this.shadowRoot.querySelector ('pre');
-		const ta = this.querySelector ('textarea');
-		const slot = this.shadowRoot.querySelector ('slot');
-		const config = { childList: true, characterData: true, subtree: true};
-		this.contentNode = pre;
-		this.highlighter = new Highlighter(this.contentNode);
+		this.pre = this.shadowRoot.querySelector('pre');
+		const slot = this.shadowRoot.querySelector('slot');
+
 		this.inline = this.getAttribute('inline') || this.inline;
-		let lastMutationTime = 0;
-
-		this.observer = new MutationObserver ((mutations, observer) => {
-			const currentTime = Date.now();
-
-		    if (currentTime - lastMutationTime >= 1000) {
-		        lastMutationTime = currentTime;
-		        this.updateContentIfNeeded();
-		    }
-		});
-
-		if (ta) {
-			pre.textContent = ta.value;
-			ta.remove();
-		} else {
-			pre.textContent = this.innerHTML;
-		}
-
-		this.replaceChildren();
-		pre.textContent = this.resetSpaces();
+		this.textContent = this.resetSpaces();
 		if (this.highlight) this.highlightCode();
-		this.observer.observe (pre, config)
+
+		slot.addEventListener('slotchange', event => {
+			this.updateContentIfNeeded();
+	    }, this.abortController.signal);
 	}
 
 	/**
@@ -142,7 +118,7 @@ export class WijitCode extends HTMLElement {
 	 * @remarks Clean up resources and remove event listeners.
 	 */
 	disconnectedCallback () {
-		this.observer.disconnect();
+		this.abortController.abort();
 	}
 
 	/**
@@ -154,21 +130,19 @@ export class WijitCode extends HTMLElement {
      *              redundant updates during rapid slot changes.
 	 */
 	updateContentIfNeeded() {
-		// console.log(this.#needsUpdate)
-		// if (this.#needsUpdate) {
-			// this.contentNode.innerText = this.resetSpaces();
+		if (this.#needSlotChange) {
+			this.innerHTML = this.resetSpaces(this);
 			if (this.highlight) this.highlightCode ();
-		// } else {
-			// this.#needsUpdate = true;
-		// }
+		} else {
+			this.#needSlotChange = true;
+		}
 	}
 
 	highlightCode (syntax, string) {
-		// console.log('highlighting');
 		syntax = syntax || this.highlight;
-		const content = string || this.contentNode.textContent;
-		this.highlighter.clear();
-    	this.highlighter.highlight(syntax, content);
+		const content = string || this.textContent;
+		const highlighter = new Highlighter(this);
+    	highlighter.highlight(syntax, content);
 	}
 
 	/**
@@ -186,9 +160,9 @@ export class WijitCode extends HTMLElement {
 	 * @returns {string} The formatted code with normalized indentation.
 	 */
 	resetSpaces (container) {
-		this.#needsUpdate = false;
-		container = container || this.contentNode;
-		const html = container.innerText.replace(
+		this.#needSlotChange = false;
+		container = container || this;
+		const html = container.innerHTML.replace(
 			/^ +/gm,
 			(spaces) => '\t'.repeat(spaces.length)
 		).trim();
@@ -215,18 +189,17 @@ export class WijitCode extends HTMLElement {
 	 *          - Any other value: Set to false and remove inline styling.
 	 */
 	set inline (value) {
-		const node = this.contentNode;
 		switch (value) {
 		case '':
 		case 'true':
 		case true:
 			value = true;
-			if (node) node.classList.add('inline');
+			if (this.pre) this.pre.classList.add('inline');
 			break;
 		default:
 			value = false;
 			this.removeAttribute('inline');
-			if (node) node.classList.remove('inline');
+			if (this.pre) this.pre.classList.remove('inline');
 			break;
 		}
 		this.#inline = value;
@@ -256,10 +229,63 @@ export class WijitCode extends HTMLElement {
     }
 }
 
+export class WijitTa extends HTMLTextAreaElement {
+	abortController = new AbortController();
+
+	/**
+	 * @constructor
+	 * @description Creates a new WijitCode instance and sets up its shadow DOM.
+	 */
+	constructor() {
+		super();
+		if (!document.head.querySelector('#wijit-textarea-css')) {
+			document.head.prepend(this.getCss());
+		}
+	}
+
+	/**
+	 * @method connectedCallback
+	 * @description Called when the element is inserted into the DOM.
+	 * @remarks Perform initial setup and establish event listeners after the element is connected.
+	 */
+	connectedCallback() {
+	}
+
+	/**
+	 * @method attributeChangedCallback
+	 * @description Called when attributes change.
+	 */
+	attributeChangedCallback (attr, oldval, newval) {
+		this[attr] = newval;
+	}
+
+	/**
+	 * @method disconnectedCallback
+	 * @description Called when the element is removed from the DOM.
+	 * @remarks Clean up resources and remove event listeners.
+	 */
+	disconnectedCallback () {
+		this.abortController.abort();
+	}
+
+	getCss () {
+		const style = document.createElement('style');
+		style.id = 'wijit-textarea-css';
+		style.textContent = `
+			textarea[is="wijit-ta"] {
+				background: transparent;
+				color: inherit;
+				overflow-x: auto;
+				white-space: nowrap;
+			}
+		`;
+		return style;
+	}
+}
+
 export class Highlighter {
 	element;
 	highlights = new Map();
-	highlighter = new Map();
 
 	constructor (element) {
 		this.element = element;
@@ -284,12 +310,11 @@ export class Highlighter {
 	        	const url = syntax.startsWith(("http", ".", "/")) ? syntax : `./syntax.${syntax}.js`;
 				syntax = await import (url);
 			}
+			return syntax;
 		} catch (error) {
 			console.error ("Error loading Highlight Syntax: ", error);
 			throw error;
 		}
-
-		return syntax;
 	}
 
 	highlightCode (syntax, content) {
@@ -340,22 +365,14 @@ export class Highlighter {
         return ranges;
     }
 
-    setHighlights (ranges = [], type = 'test') {
-    	if (this.highlights.get(type) !== undefined) this.clearHighlight(type);
-        const highlighter = new Highlight(...ranges);
-        CSS.highlights.set (type, highlighter);
-        this.highlights.set (type, highlighter);
-        // console.log(this.highlighter.size);
-        return highlighter;
-    }
-
-    clearHighlight(type) {
-    	this.highlights.delete(type);
-    }
-
-    clear () {
-    	this.highlights.clear();
+    setHighlights (ranges = [], type = 'test', highlights) {
+    	highlights = highlights || this.highlights;
+        const highlight = new Highlight(...ranges);
+        CSS.highlights.set (type, highlight);
+        highlights.set (type, highlight);
+        return highlights;
     }
 }
 
 document.addEventListener('DOMContentLoaded', customElements.define('wijit-code', WijitCode));
+document.addEventListener('DOMContentLoaded', customElements.define('wijit-ta', WijitTa, {extends:'textarea'}));

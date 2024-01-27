@@ -20,8 +20,8 @@ export default {
 		}
 		return ranges;
 	},
-	attribute: null,
 	comment: /(?:\#\!.*|\/\/.*|\/\*[\s\S]*?\*\/)/g,
+	decorator:  /\b@\w+(?:\([^)]*\))?\b/g,
 	function: function(string, node) {
 		let ranges = [];
 		const regex = /(?<!\w)\bfunction\s+([^\s(]+)|^\s+(?:(?!do|while|for)\b)([^\s(]+)\s*\(/gm;
@@ -79,8 +79,8 @@ export default {
 	    'timeupdate', 'toggle', 'touchcancel', 'touchend', 'touchmove', 'touchstart', 'transitionend',
 	    'unload', 'volumechange', 'waiting', 'wheel'
 	],
-	number: /\b\d+\w*\b/g,
+	number: /[+-]?\d+[\b\.\w]*/g,
 	operator: /\+|-|(?<!\/)\*(?!\/)|(?<![\/\*])\/(?![\/\*])|%|===|!==|>=|<=|>|<|!=|=|&&|\|\||(?<!#)!/g,
-	string: /['"`][^'"`"]*['"`]/g,
+	string: /["'][^"']*["']/g,
 	tag: null
 }

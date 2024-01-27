@@ -26,6 +26,10 @@
 	    textarea {
 	    	flex-basis: 500px;
 	    }
+
+	    textarea .keyword {
+	    	color: blue;
+	    }
 	</style>
 </head>
 <body>
@@ -147,56 +151,43 @@ level1();
 	<section>
 		<header><h2>Highlights</h2></header>
 
-		<textarea is="wijit-ta" indent="4" highlight="html">
-			//-- Highlight
-			<section class="row center">
-				<div>
-					<label for="demo-indent">indent</label>
-					<input
-						name="indent"
-						value="2"
-						id="demo-indent"
-						list="demo-indents"
-						oninput="change(this, 'indent')">
+		<wijit-code highlight="html" test>
+			<!-- Excluded Comment -->
+			<textarea>
+				<!-- Comment -->
+				<!--A
+					multi-line
+					comment-->
 
-					<datalist id="demo-indents">
-						<option>1</option>
-						<option>3px</option>
-						<option>4px</option>
-					</datalist>
+				<img src="false" onerror="alert('foo')">
 
-				</div>
-				<div>
-					<label for="demo-inline">inline</label>
-					<input type="checkbox" name="inline" id="demo-inline" onchange="change(this, 'inline')">
-				</div>
-			</section>
-		</textarea>
+				<section class="row center">
+					<p class="some-class">Some Text</p>
+					<div>
+						<label for="test-number" data-foo="" id=foo>Number</label>
 
-		<wijit-code highlight="html">
-			//-- Highlight
-			<section class="row center">
-			<div>
-				<label for="demo-indent">indent</label>
-				<input
-					name="indent"
-					value="2"
-					id="demo-indent"
-					list="demo-indents"
-					oninput="change(this, 'indent')">
+						<input
+							name="input"
+							value="2"
+							id="test-number"
+							list="test-numbers"
+							oninput="doSomething(event, 'foo')">
 
-				<datalist id="demo-indents">
-					<option>1</option>
-					<option>3px</option>
-					<option>4px</option>
-				</datalist>
-
-			</div>
-			<div>
-				<label for="demo-inline">inline</label>
-				<input type="checkbox" name="inline" id="demo-inline" onchange="change(this, 'inline')">
-			</div>
-		</section>
+						<datalist id="test-numbers">
+							<option>1</option>
+							<option>123.456</option>
+							<option>-12.5</option>
+							<option>+100</option>
+							<option>3px</option>
+							<option>2.5e3</option>
+							<option>1.2e-3</option>
+							<option>0x123</option>
+							<option>9.876E-9</option>
+							<option>0xFAF</option>
+						</datalist>
+					</div>
+				</section>
+			</textarea>
 		</wijit-code>
 	</section>
 

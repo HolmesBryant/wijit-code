@@ -1,19 +1,17 @@
 export default {
 	argument: null,
-	attribute: null,
-	comment: null,
+	comment: /<!--([\s\S]*?)-->/g,
+	decorator: null,
 	function: null,
-	keyword: ['some','key', 'words'],
-	number: /\b\d+\b/g,
+	keyword: null,
+	number: /[+-]?\d+[\b\.\w]*/g,
 	operator: null,
-	string: null,
+	string: /["'][^"']*["']/g,
 	tag: function (string, node) {
 		const ranges = [];
-		const regex = /(<\w+\b).*(>)/g;
-		// const regex = /(<\/\w+>)/g;
+		const regex = /(<\/*\w+)[^>]*(>*)/g;
 		const matches = string.matchAll (regex);
 		for (const item of matches) {
-			// console.log(item);
 			let start = item.index;
 			const fullmatch = item.shift();
 			for (const token of item) {
