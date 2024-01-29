@@ -5,6 +5,8 @@
  * @author Holmes Bryant <webbmaastaa@gmail.com>
  * @license GPL-3.0
  *
+ * In Firefox about:config set dom.customHighlightAPI.enabled to true
+ *
  * @example
  * <wijit-code>
  *   <div>This is some HTML</div>
@@ -14,7 +16,11 @@
  * </wijit-code>
  */
 export class WijitCode extends HTMLElement {
+	abortController = new AbortController();
+
 	contentNode;
+
+	#edit = false;
 
 	/**
 	 * @private
@@ -22,8 +28,6 @@ export class WijitCode extends HTMLElement {
 	 * @description Whether to add color highlights.
 	 */
 	#highlight = false;
-
-	highlighter;
 
 	/**
 	 * @private
@@ -39,6 +43,8 @@ export class WijitCode extends HTMLElement {
 	 */
 	#indent = 2;
 
+	lastMutationTime = 0;
+
 	/**
 	 * @private
 	 * @type boolean
@@ -51,14 +57,14 @@ export class WijitCode extends HTMLElement {
 	 * @type MutationObserver
 	 * @description Used to manage mutation events.
 	 */
-	observer;
+	mutationObserver;
 
 	/**
 	 * @static
 	 * @type string[]
 	 * @description A list of attributes to observe for changes.
 	 */
-	static observedAttributes = ['inline', 'indent', 'highlight'];
+	static observedAttributes = ['inline', 'indent', 'highlight', 'edit'];
 
 	/**
 	 * @constructor
@@ -86,8 +92,7 @@ export class WijitCode extends HTMLElement {
 				}
 			</style>
 
-			<pre contenteditable spellcheck="false"></pre>
-			<slot></slot>
+			<pre spellcheck="false"><slot></slot></pre>
 		`;
 	}
 
@@ -97,35 +102,27 @@ export class WijitCode extends HTMLElement {
 	 * @remarks Perform initial setup and establish event listeners after the element is connected.
 	 */
 	connectedCallback() {
-		const pre = this.shadowRoot.querySelector ('pre');
-		const ta = this.querySelector ('textarea');
+		// if (!this.hasAttribute('test')) return;
+
+		let content;
 		const slot = this.shadowRoot.querySelector ('slot');
-		const config = { childList: true, characterData: true, subtree: true};
-		this.contentNode = pre;
-		this.highlighter = new Highlighter(this.contentNode);
+		const ta = this.querySelector ('textarea');
+		this.contentNode = this.shadowRoot.querySelector ('pre');
 		this.inline = this.getAttribute('inline') || this.inline;
-		let lastMutationTime = 0;
-
-		this.observer = new MutationObserver ((mutations, observer) => {
-			const currentTime = Date.now();
-
-		    if (currentTime - lastMutationTime >= 1000) {
-		        lastMutationTime = currentTime;
-		        this.updateContentIfNeeded();
-		    }
-		});
 
 		if (ta) {
-			pre.textContent = ta.value;
+			content = ta.value;
 			ta.remove();
 		} else {
-			pre.textContent = this.innerHTML;
+			content = this.innerHTML;
 		}
 
-		this.replaceChildren();
-		pre.textContent = this.resetSpaces();
-		if (this.highlight) this.highlightCode();
-		this.observer.observe (pre, config)
+		this.textContent = this.resetSpaces(content);
+		if (this.highlight) this.highlightCode ();
+
+		slot.addEventListener('slotchange', () => {
+			this.updateIfNeeded();
+	    }, this.abortController.signal);
 	}
 
 	/**
@@ -142,6 +139,7 @@ export class WijitCode extends HTMLElement {
 	 * @remarks Clean up resources and remove event listeners.
 	 */
 	disconnectedCallback () {
+		this.abortController.abort();
 		this.observer.disconnect();
 	}
 
@@ -153,22 +151,26 @@ export class WijitCode extends HTMLElement {
      *              is needed on the next call to this method. This helps prevent
      *              redundant updates during rapid slot changes.
 	 */
-	updateContentIfNeeded() {
-		// console.log(this.#needsUpdate)
-		// if (this.#needsUpdate) {
-			// this.contentNode.innerText = this.resetSpaces();
-			if (this.highlight) this.highlightCode ();
-		// } else {
-			// this.#needsUpdate = true;
-		// }
+	updateIfNeeded(delay = 1000) {
+		const currentTime = Date.now();
+
+		if (this.#needsUpdate) {
+			if (currentTime - this.lastMutationTime > delay) {
+			    this.lastMutationTime = currentTime;
+				this.contentNode.textContent = this.resetSpaces(content);
+				if (this.highlight) this.highlightCode ();
+				this.#needsUpdate = false;
+			}
+		} else {
+			this.#needsUpdate = true;
+		}
 	}
 
-	highlightCode (syntax, string) {
-		// console.log('highlighting');
+	highlightCode (syntax, element) {
 		syntax = syntax || this.highlight;
-		const content = string || this.contentNode.textContent;
-		this.highlighter.clear();
-    	this.highlighter.highlight(syntax, content);
+		element = element || this;
+		const h = new Highlighter(element);
+    	h.highlight(syntax);
 	}
 
 	/**
@@ -185,18 +187,38 @@ export class WijitCode extends HTMLElement {
 	 *          - Remove the leading whitespace from each line and return the formatted code as a string.
 	 * @returns {string} The formatted code with normalized indentation.
 	 */
-	resetSpaces (container) {
-		this.#needsUpdate = false;
-		container = container || this.contentNode;
-		const html = container.innerText.replace(
-			/^ +/gm,
-			(spaces) => '\t'.repeat(spaces.length)
-		).trim();
+	resetSpaces (string) {
+		string = string
+			.replace(/^ +/gm, (spaces) => '\t'.repeat(spaces.length) )
+			.trim();
 
-		const lines = html.split("\n");
+		const lines = string.split("\n");
 		const spaces = lines.at(-1).match(/^\s*/)[0].length;
 		const regex = new RegExp(`^\\s{${spaces}}`, "g");
 		return lines.map (line => line.replace(regex, '')).join("\n");
+	}
+
+	enableEdit (element, delay = 1000) {
+		element = element || this.contentNode;
+		const config = { childList: true, characterData: true, subtree: true};
+		const callback = (mutations) => {
+			const currentTime = Date.now();
+		    if (currentTime - this.lastMutationTime > delay) {
+		        this.lastMutationTime = currentTime;
+		        this.updateIfNeeded ();
+		    }
+		}
+
+		if (!this.mutationObserver) this.mutationObserver = new MutationObserver (callback);
+		element.setAttribute('contenteditable', 'true');
+		this.mutationObserver.observe (element, config);
+	}
+
+	disableEdit (element, mutationObserver) {
+		element = element || this.contentNode;
+		mutationObserver = mutationObserver || this.mutationObserver;
+		element.removeAttribute ('contenteditable');
+		if (mutationObserver) mutationObserver.disconnect();
 	}
 
 	/**
@@ -254,79 +276,103 @@ export class WijitCode extends HTMLElement {
     set highlight (value) {
     	this.#highlight = value;
     }
+
+    get edit () { return this.#edit; }
+    set edit (value) {
+		const elem = this.contentNode || this.shadowRoot.querySelector('pre');
+    	switch (value) {
+    	case '':
+    	case 'true':
+    		this.#edit = true;
+    		this.enableEdit(elem);
+    		break;
+    	default:
+    		this.#edit = false;
+    		this.disableEdit(elem);
+    	}
+    	console.log(this.#edit)
+    }
 }
 
-export class Highlighter {
-	element;
+class Highlighter {
+	textNode;
 	highlights = new Map();
 	highlighter = new Map();
 
 	constructor (element) {
-		this.element = element;
+		if (element.childNodes.length > 1) {
+			element.textContent = element.innerHTML;
+		}
+
+		this.textNode = element.childNodes[0];
+		return this;
 	}
 
-	highlight (syntax, string) {
-		string = string || this.element.innerHTML;
-
+	highlight (syntax, textNode) {
+		textNode = textNode || this.textNode;
 		if (typeof window.Highlight === 'undefined') {
     		console.error('Browser does not support CSS Custom Highlight API');
     		return;
     	}
 
         this.getSyntax (syntax).then ( response => {
-        	this.highlightCode(response.default, string);
+        	if (!response.default) response = {default: response};
+        	this.highlightCode(response.default, textNode);
         });
 	}
 
 	async getSyntax (syntax) {
-		try {
-			if (typeof syntax === 'string') {
+		if (typeof syntax === 'string') {
+			try {
 	        	const url = syntax.startsWith(("http", ".", "/")) ? syntax : `./syntax.${syntax}.js`;
 				syntax = await import (url);
+			} catch (error) {
+				console.error ("Error loading Highlight Syntax: ", error);
+				throw error;
 			}
-		} catch (error) {
-			console.error ("Error loading Highlight Syntax: ", error);
-			throw error;
 		}
 
 		return syntax;
 	}
 
-	highlightCode (syntax, content) {
-		content = content || this.element.textContent;
-        let ranges = [];
+	highlightCode (syntax = {}, textNode) {
+        if (textNode.nodeType !== Node.TEXT_NODE) {
+        	throw new Error(`Second argument must be a TEXT_NODE (3). Given nodeType is (${textNode.nodeType})`);
+        }
+
+        let ranges;
+        const string = textNode.textContent;
+
         for (const prop of Object.keys (syntax)) {
             const value = syntax[prop];
 
             if (!value) {
             	continue;
             } else if (Array.isArray (value)) {
+            	const range = [];
                 value.forEach (word => {
                     const regex = new RegExp(`\\b${word}\\b`, "g");
-                    ranges.push (this.setRanges(regex));
+                    range.push (this.setRanges(regex, string, textNode));
                 });
 
-                ranges = ranges.filter (sub => sub.length > 0).flat();
-                this.setHighlights (ranges, prop);
+                ranges = range.filter (sub => sub.length > 0).flat();
             } else if (value instanceof Function) {
-                ranges = value(content, this.element.childNodes[0]);
-                this.setHighlights(ranges, prop);
+                ranges = value(string, textNode);
             } else if (value instanceof RegExp) {
-                ranges = this.setRanges (value);
-                this.setHighlights(ranges, prop);
+                ranges = this.setRanges (value, string, textNode);
             } else {
                 console.error (`Invalid syntax definition for ${prop}: `, `"${value}"`);
             }
+
+            this.setHighlights(ranges, prop);
         }
 
         return ranges;
     }
 
     setRanges (regex, string, node) {
-        node = node || this.element.childNodes[0];
-        const content = string || this.element.textContent;
         const ranges = [];
-        const matches = content.matchAll(regex);
+        const matches = string.matchAll(regex);
 
         for (const match of matches) {
             if (!match[0]) continue;
@@ -341,21 +387,19 @@ export class Highlighter {
     }
 
     setHighlights (ranges = [], type = 'test') {
-    	if (this.highlights.get(type) !== undefined) this.clearHighlight(type);
         const highlighter = new Highlight(...ranges);
         CSS.highlights.set (type, highlighter);
         this.highlights.set (type, highlighter);
-        // console.log(this.highlighter.size);
         return highlighter;
     }
 
-    clearHighlight(type) {
+    /*clearHighlight(type) {
     	this.highlights.delete(type);
-    }
+    }*/
 
-    clear () {
+    /*clear () {
     	this.highlights.clear();
-    }
+    }*/
 }
 
 document.addEventListener('DOMContentLoaded', customElements.define('wijit-code', WijitCode));

@@ -4,6 +4,7 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Wijit-Code Web Component</title>
+	<!-- <script type="module" src="src/wijit-code-v1.js"></script> -->
 	<script type="module" src="src/wijit-code.js"></script>
 	<script type="module" src="extra/wijit-form.js"></script>
 	<link rel="stylesheet" href="styles.css">
@@ -25,10 +26,6 @@
 
 	    textarea {
 	    	flex-basis: 500px;
-	    }
-
-	    textarea .keyword {
-	    	color: blue;
 	    }
 	</style>
 </head>
@@ -91,7 +88,7 @@
 		</section>
 	</details>
 
-	<!-- <h2>Demo</h2>
+	<h2>Demo</h2>
 	<wijit-form wait="false" success="false">
 		<section class="row center">
 			<div>
@@ -118,40 +115,42 @@
 				<input type="checkbox" name="inline" id="demo-inline" onchange="change(this, 'inline')">
 			</div>
 		</section>
-		<section class="row">
-			<div>
-				<label for="demo-ta">Sample Code</label>
-				<textarea name="sample" id="demo-ta">
-function level1() {
- function level2() {
-  function level3() {
-   function level4() {
-    function level5() {
-     console.log("5th nested level.");
-    }
-    level5();
-   }
-   level4();
-  }
-  level3();
- }
- level2();
-}
-level1();
-				</textarea>
-			</div>
-			<fieldset>
-				<legend>Result</legend>
-				<wijit-code id="demo-result">
-				</wijit-code>
-			</fieldset>
+		<section>
+			<wijit-code highlight="javascript" test>
+				#! hashbang
+
+				/**
+				 * @function foo
+				 * @description Does foo things
+				 *
+				 * @param {HTMLelement}	element An HTML element
+				 */
+				function foo (element) {
+					let bar, output = '';
+					const baz = "boom";
+					const result = document.querySelector('#result');
+					const bing = ["one", 123.456, -12.5, +100, "3px", 2^3, 2.5e3, 1.2E-3, 1**2, 0x123, 0xFAF];
+
+					bar = 2 * 3;
+
+					// This is a comment
+					/*Another comment*/
+					for (const child of element.children) {
+						for (const attr of child.attributes) {
+							output += `${attr.name} -> ${attr.value}\n`;
+						}
+					}
+
+					result.textContent = output;
+				}
+			</wijt-code>
 		</section>
-	</wijit-form> -->
+	</wijit-form>
 
 	<section>
 		<header><h2>Highlights</h2></header>
 
-		<wijit-code highlight="html" test>
+		<wijit-code highlight="html">
 			<!-- Excluded Comment -->
 			<textarea>
 				<!-- Comment -->
@@ -189,6 +188,7 @@ level1();
 				</section>
 			</textarea>
 		</wijit-code>
+
 	</section>
 
 	<section>
