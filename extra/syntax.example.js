@@ -21,8 +21,9 @@
  * 				Example: ['some', 'key', 'words']
  *
  * 				RegExp expressions are useful for simple matches that
- * 				do not require extra processing. The RexExp *must* include
- * 				the "g" flag. Do not put quotes around the expression.
+ * 				do not require extra processing or capture groups.
+ * 				The RexExp must include the "g" flag.
+ * 				Do not put quotes around the expression.
  * 				Example: /\b\d+\b/g
  *
  * 				Functions are useful for more complex processing.
@@ -42,19 +43,16 @@ export default {
 	attribute: null,
 	comment: null,
 	function: function(string, node) {
-		let ranges = [];
-		const regex = /(?<!\w)\bfunction\s+([^\s(]+)|^\s+(?:(?!do|while|for)\b)([^\s(]+)\s*\(/gm;
-		const matches = string.matchAll(regex);
-		for (const item of matches) {
-			if (!item[0]) continue;
-			const word = item.flat().filter(value => value && value.trim()).pop();
-			const re = new RegExp(`\\b${word}\\b`);
-			const start = item.index + item[0].search(re);
+	    let match;
+	    const ranges = [];
+		const regex = /\b[^(]\(/g;
+	    while ((match = regex.exec(string))) {
 			const range = new Range();
-			range.setStart(node, start);
-			range.setEnd(node, start + word.length);
+			range.setStart(node, match.index);
+			range.setEnd(node, match.index + match[0].length);
 			ranges.push(range);
-		}
+	    }
+
 		return ranges;
 	},
 	keyword: ['some','key', 'words'],

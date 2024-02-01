@@ -16,23 +16,45 @@
  * </wijit-code>
  */
 export class WijitCode extends HTMLElement {
-	abortController = new AbortController();
-
-	contentNode;
-
-	#edit = false;
+	/**
+	 * @private
+	 * @type AbortController
+	 * @description Used to remove event listeners when element is disconnected.
+	 */
+	#abortController = new AbortController();
 
 	/**
 	 * @private
 	 * @type boolean
-	 * @description Whether to add color highlights.
+	 * @description Whether to make the content editable.
+	 * @comment Has public getter (edit)
+	 */
+	#edit = false;
+
+	/**
+	 * @private
+	 * @type boolean | string
+	 * @description If this is a string, either the name of the syntax to use for highlighting OR the importable url to the syntax file.
+	 *              The syntax file should be named "syntax.[name].js".
+	 *              For example, for HTML, this value would be either:
+	 *              "html", with the syntax file "syntax.html.js" in the same dir as wijit-code.js,
+	 *              OR "./path/to/syntax.html.js", with the syntax file located at that path.
+	 * @comment Has public getter (highlight)
 	 */
 	#highlight = false;
 
 	/**
 	 * @private
+	 * @type Highlighter
+	 * @description An instance of the Highlighter class
+	 */
+	#highlighter;
+
+	/**
+	 * @private
 	 * @type boolean
 	 * @description Whether to display the code inline.
+	 * @comment Has public getter (inline)
 	 */
 	#inline = false;
 
@@ -40,15 +62,21 @@ export class WijitCode extends HTMLElement {
 	 * @private
 	 * @type number | string
 	 * @description The number of spaces to represent a tab character. Can use most css length values.
+	 * @comment Has public getter (indent)
 	 */
 	#indent = 2;
 
-	lastMutationTime = 0;
+	/**
+	 * @private
+	 * @type Number (milliseconds)
+	 * @description The last time a mutation event occurred.
+	 */
+	#lastMutationTime = 0;
 
 	/**
 	 * @private
 	 * @type boolean
-	 * @description Tracks if a slot change requires content update.
+	 * @description Tracks if a content update is needed.
 	 */
 	#needsUpdate = false;
 
@@ -64,7 +92,7 @@ export class WijitCode extends HTMLElement {
 	 * @type string[]
 	 * @description A list of attributes to observe for changes.
 	 */
-	static observedAttributes = ['inline', 'indent', 'highlight', 'edit'];
+	static observedAttributes = ['edit', 'highlight', 'inline', 'indent'];
 
 	/**
 	 * @constructor
@@ -83,7 +111,10 @@ export class WijitCode extends HTMLElement {
 				}
 
 				pre
-				{ tab-size: var(--indent); }
+				{
+					tab-size: var(--indent);
+					white-space: pre-wrap;
+				}
 
 				.inline {
 					display: inline;
@@ -103,26 +134,15 @@ export class WijitCode extends HTMLElement {
 	 */
 	connectedCallback() {
 		// if (!this.hasAttribute('test')) return;
-
-		let content;
+		const container = this.shadowRoot.querySelector('pre');
 		const slot = this.shadowRoot.querySelector ('slot');
-		const ta = this.querySelector ('textarea');
 		this.contentNode = this.shadowRoot.querySelector ('pre');
-		this.inline = this.getAttribute('inline') || this.inline;
-
-		if (ta) {
-			content = ta.value;
-			ta.remove();
-		} else {
-			content = this.innerHTML;
-		}
-
-		this.textContent = this.resetSpaces(content);
+		this.textContent = this.resetSpaces(this.getContent());
 		if (this.highlight) this.highlightCode ();
 
 		slot.addEventListener('slotchange', () => {
 			this.updateIfNeeded();
-	    }, this.abortController.signal);
+	    }, this.#abortController.signal);
 	}
 
 	/**
@@ -139,7 +159,7 @@ export class WijitCode extends HTMLElement {
 	 * @remarks Clean up resources and remove event listeners.
 	 */
 	disconnectedCallback () {
-		this.abortController.abort();
+		this.#abortController.abort();
 		this.observer.disconnect();
 	}
 
@@ -151,15 +171,14 @@ export class WijitCode extends HTMLElement {
      *              is needed on the next call to this method. This helps prevent
      *              redundant updates during rapid slot changes.
 	 */
-	updateIfNeeded(delay = 1000) {
+	updateIfNeeded(delay = 500) {
 		const currentTime = Date.now();
-
 		if (this.#needsUpdate) {
-			if (currentTime - this.lastMutationTime > delay) {
-			    this.lastMutationTime = currentTime;
-				this.contentNode.textContent = this.resetSpaces(content);
-				if (this.highlight) this.highlightCode ();
-				this.#needsUpdate = false;
+			if (currentTime - this.#lastMutationTime > delay) {
+			    this.#lastMutationTime = currentTime;
+				this.textContent = this.resetSpaces(this.getContent());
+				if (this.highlighter) this.destroyHighlights();
+					if (this.highlight) this.highlightCode();
 			}
 		} else {
 			this.#needsUpdate = true;
@@ -169,8 +188,20 @@ export class WijitCode extends HTMLElement {
 	highlightCode (syntax, element) {
 		syntax = syntax || this.highlight;
 		element = element || this;
-		const h = new Highlighter(element);
-    	h.highlight(syntax);
+		this.highlighter = this.highlighter || new Highlighter(element);
+		try {
+	    	this.highlighter.highlight(syntax, this.childNodes[0]);
+		} catch (error) {
+			console.error (error);
+		}
+	}
+
+	destroyHighlights () {
+		try {
+			this.highlighter.removeAll();
+		} catch (error) {
+			console.error (error);
+		}
 	}
 
 	/**
@@ -188,6 +219,7 @@ export class WijitCode extends HTMLElement {
 	 * @returns {string} The formatted code with normalized indentation.
 	 */
 	resetSpaces (string) {
+		this.needsUpdate = false;
 		string = string
 			.replace(/^ +/gm, (spaces) => '\t'.repeat(spaces.length) )
 			.trim();
@@ -198,13 +230,27 @@ export class WijitCode extends HTMLElement {
 		return lines.map (line => line.replace(regex, '')).join("\n");
 	}
 
+	getContent (elem) {
+		elem = elem || this;
+		const ta = elem.querySelector ('textarea');
+		const content = (ta) ? ta.value : this.unencodeHtmlEntities(elem.innerHTML);
+		if (ta) ta.remove();
+		return content;
+	}
+
+	unencodeHtmlEntities(encodedText) {
+		const elem = document.createElement('textarea');
+		elem.innerHTML = encodedText;
+		return elem.value;
+	}
+
 	enableEdit (element, delay = 1000) {
 		element = element || this.contentNode;
 		const config = { childList: true, characterData: true, subtree: true};
 		const callback = (mutations) => {
 			const currentTime = Date.now();
-		    if (currentTime - this.lastMutationTime > delay) {
-		        this.lastMutationTime = currentTime;
+		    if (currentTime - this.#lastMutationTime > delay) {
+		        this.#lastMutationTime = currentTime;
 		        this.updateIfNeeded ();
 		    }
 		}
@@ -237,7 +283,7 @@ export class WijitCode extends HTMLElement {
 	 *          - Any other value: Set to false and remove inline styling.
 	 */
 	set inline (value) {
-		const node = this.contentNode;
+		const node = this.shadowRoot.querySelector('pre');
 		switch (value) {
 		case '':
 		case 'true':
@@ -272,9 +318,15 @@ export class WijitCode extends HTMLElement {
 	}
 
 	get highlight () { return this.#highlight; }
-
     set highlight (value) {
+    	switch (value) {
+    	case '':
+    	case 'false':
+    		value = false;
+    		break;
+    	}
     	this.#highlight = value;
+    	if (this.contentNode) this.updateIfNeeded();
     }
 
     get edit () { return this.#edit; }
@@ -295,29 +347,42 @@ export class WijitCode extends HTMLElement {
 }
 
 class Highlighter {
-	textNode;
-	highlights = new Map();
-	highlighter = new Map();
+	container;
+	suffix = '_' + Math.random().toString(36).substring(2, 15);
+	colors = new Map ([
+		['argument', 'hsl(32, 93%, 66%)'],
+		['attribute', 'hsl(300, 30%, 68%)'],
+		['comment', 'hsl(221, 12%, 69%)'],
+		['function', 'hsl(210, 50%, 60%)'],
+		['keyword', 'hsl(300, 30%, 68%)'],
+		['number', 'hsl(32, 93%, 66%)'],
+		['operator', 'hsl(13, 93%, 66%)'],
+		['punctuation', 'hsl(180, 36%, 54%)'],
+		['string', 'hsl(114, 31%, 68%)'],
+		['tag', 'hsl(357, 79%, 65%)']
+	]);
 
 	constructor (element) {
-		if (element.childNodes.length > 1) {
-			element.textContent = element.innerHTML;
-		}
-
-		this.textNode = element.childNodes[0];
+		this.container = element;
 		return this;
 	}
 
 	highlight (syntax, textNode) {
-		textNode = textNode || this.textNode;
-		if (typeof window.Highlight === 'undefined') {
+		if (typeof window.Highlight === undefined) {
     		console.error('Browser does not support CSS Custom Highlight API');
     		return;
     	}
 
+		textNode = textNode || this.container.childNodes[0];
+
+	    // inserting ::highlight styles into a custom element's shadowRoot doesn't seem to work in Firefox
+	    // this.element.shadowRoot.prepend (this.getStyle());
+	    const style = document.head.querySelector(`#highlights${this.suffix}`);
+	    if (!style) document.head.append (this.getStyle());
+
         this.getSyntax (syntax).then ( response => {
-        	if (!response.default) response = {default: response};
-        	this.highlightCode(response.default, textNode);
+        	const defs = response.default || response;
+        	this.highlightCode(defs, textNode);
         });
 	}
 
@@ -349,22 +414,24 @@ class Highlighter {
             if (!value) {
             	continue;
             } else if (Array.isArray (value)) {
+            	// Array of key words
             	const range = [];
                 value.forEach (word => {
                     const regex = new RegExp(`\\b${word}\\b`, "g");
                     range.push (this.setRanges(regex, string, textNode));
                 });
-
                 ranges = range.filter (sub => sub.length > 0).flat();
             } else if (value instanceof Function) {
+            	// function returning flat array of range objects
                 ranges = value(string, textNode);
             } else if (value instanceof RegExp) {
+                // regular expression
                 ranges = this.setRanges (value, string, textNode);
             } else {
                 console.error (`Invalid syntax definition for ${prop}: `, `"${value}"`);
             }
 
-            this.setHighlights(ranges, prop);
+            this.setHighlight(ranges, prop);
         }
 
         return ranges;
@@ -386,20 +453,59 @@ class Highlighter {
         return ranges;
     }
 
-    setHighlights (ranges = [], type = 'test') {
+    getHighlights () {
+    	const entries = new Map ();
+    	CSS.highlights.forEach ((highlight, name) => {
+    		if (name.endsWith(this.suffix)) {
+    			entries.set (name, highlight);
+    		}
+    	})
+    	return entries;
+    }
+
+    setHighlight (ranges = [], type = 'test') {
+    	// Add this.suffix to isolate entries in the CSS Highlights Registry
+    	// Otherwise, highlights between class instances interfere with each other
+    	type = type + this.suffix;
         const highlighter = new Highlight(...ranges);
         CSS.highlights.set (type, highlighter);
-        this.highlights.set (type, highlighter);
         return highlighter;
     }
 
-    /*clearHighlight(type) {
-    	this.highlights.delete(type);
-    }*/
+    getStyle () {
+    	const style = document.createElement('style');
+    	let content = '';
 
-    /*clear () {
-    	this.highlights.clear();
-    }*/
+    	style.id = `highlights${this.suffix}`;
+    	this.colors.forEach ((color, key) => {
+    		content += `::highlight(${key}${this.suffix}) { color: ${color}}\n`;
+    	});
+
+    	style.textContent = content;
+    	return style;
+    }
+
+    remove(type) {
+    	CSS.highlights.delete(type + this.suffix);
+    }
+
+    removeAll () {
+    	CSS.highlights.forEach ((highlight, name) => {
+    		if (name.endsWith(this.suffix)) {
+    			CSS.highlights.delete (name);
+    		}
+    	});
+    }
+
+    clearRegistry() {
+    	CSS.highlights.clear();
+    }
+
+    logRegistry () {
+    	CSS.highlights.forEach ((highlight, name) => {
+    		console.log (name, highlight);
+    	})
+    }
 }
 
 document.addEventListener('DOMContentLoaded', customElements.define('wijit-code', WijitCode));

@@ -4,11 +4,10 @@
 	<meta charset="utf-8">
 	<meta name="viewport" content="width=device-width, initial-scale=1">
 	<title>Wijit-Code Web Component</title>
-	<!-- <script type="module" src="src/wijit-code-v1.js"></script> -->
 	<script type="module" src="src/wijit-code.js"></script>
 	<script type="module" src="extra/wijit-form.js"></script>
+	<script type="module" src="extra/wijit-tabs.js"></script>
 	<link rel="stylesheet" href="styles.css">
-	<link rel="stylesheet" href="src/highlight.css">
 
 	<style>
 		wijit-code {
@@ -17,6 +16,7 @@
 	    	border-radius: .5rem;
 			font-weight: normal;
 			padding: .5rem;
+			min-width: 300px;
 	    }
 
 	    wijit-code[inline] {
@@ -108,7 +108,15 @@
 					<option>3px</option>
 					<option>4px</option>
 				</datalist>
-
+			</div>
+			<div>
+				<label for="demo-highlight">highlight</label>
+				<select id="demo-highlight" onchange="change(this, 'highlight')">
+					<option disabled selected></option>
+					<option>false</option>
+					<option>javascript</option>
+					<option>html</option>
+				</select>
 			</div>
 			<div>
 				<label for="demo-inline">inline</label>
@@ -116,82 +124,86 @@
 			</div>
 		</section>
 		<section>
-			<wijit-code highlight="javascript" test>
-				#! hashbang
+			<details>
+				<summary>Javascript</summary>
+				<wijit-code class="demo" highlight="javascript">
+					#! hashbang
 
-				/**
-				 * @function foo
-				 * @description Does foo things
-				 *
-				 * @param {HTMLelement}	element An HTML element
-				 */
-				function foo (element) {
-					let bar, output = '';
-					const baz = "boom";
-					const result = document.querySelector('#result');
-					const bing = ["one", 123.456, -12.5, +100, "3px", 2^3, 2.5e3, 1.2E-3, 1**2, 0x123, 0xFAF];
+					/**
+					 * @function foo
+					 * @description Does foo things
+					 *
+					 * @param {HTMLElement}	element An HTML element
+					 */
+					function foo (element) {
+						let bar, output = '';
+						const baz = "boom";
+						const result = document.querySelector('#result');
+						const bing = ["one", 123.456, -12.5, +100, "3px", 2^3, 2.5e3, 1.2E-3, 1**2, 0x123, 0xFAF];
 
-					bar = 2 * 3;
+						bar = 2 * 3;
 
-					// This is a comment
-					/*Another comment*/
-					for (const child of element.children) {
-						for (const attr of child.attributes) {
-							output += `${attr.name} -> ${attr.value}\n`;
+						// This is a comment
+						/*Another comment*/
+						for (const child of element.children) {
+							for (const attr of child.attributes) {
+								output += `${attr.name} -> ${attr.value}\n`;
+							}
 						}
-					}
 
-					result.textContent = output;
-				}
-			</wijt-code>
+						someElement.addEventListener('click', event => {
+							console.log(event);
+						});
+
+						const func = (arg) => arg.toLowerCase();
+
+						result.textContent = output;
+					}
+				</wijt-code>
+			</details>
+
+			<details>
+				<summary>HTML</summary>
+				<wijit-code class="demo" highlight="html">
+					<textarea>
+						<!-- Comment -->
+						<!--A
+							multi-line
+							comment-->
+
+						<img src="false" onerror="alert('foo')">
+
+						<p class="some-class">Some Text</p>
+						<div>
+							<label for="test-number" data-foo="" id=foo>Number</label>
+
+							<input
+								name="input"
+								value="2"
+								id="test-number"
+								list="test-numbers"
+								oninput="doSomething(event)">
+
+							<datalist id="test-numbers">
+								<option>1</option>
+								<option>123.456</option>
+								<option>-12.5</option>
+								<option>+100</option>
+								<option>3px</option>
+								<option>2.5e3</option>
+								<option>1.2e-3</option>
+								<option>0x123</option>
+								<option>9.876E-9</option>
+								<option>0xFAF</option>
+							</datalist>
+						</div>
+					</textarea>
+				</wijit-code>
+			</details>
 		</section>
 	</wijit-form>
 
-	<section>
-		<header><h2>Highlights</h2></header>
-
-		<wijit-code highlight="html">
-			<!-- Excluded Comment -->
-			<textarea>
-				<!-- Comment -->
-				<!--A
-					multi-line
-					comment-->
-
-				<img src="false" onerror="alert('foo')">
-
-				<section class="row center">
-					<p class="some-class">Some Text</p>
-					<div>
-						<label for="test-number" data-foo="" id=foo>Number</label>
-
-						<input
-							name="input"
-							value="2"
-							id="test-number"
-							list="test-numbers"
-							oninput="doSomething(event, 'foo')">
-
-						<datalist id="test-numbers">
-							<option>1</option>
-							<option>123.456</option>
-							<option>-12.5</option>
-							<option>+100</option>
-							<option>3px</option>
-							<option>2.5e3</option>
-							<option>1.2e-3</option>
-							<option>0x123</option>
-							<option>9.876E-9</option>
-							<option>0xFAF</option>
-						</datalist>
-					</div>
-				</section>
-			</textarea>
-		</wijit-code>
-
-	</section>
-
-	<section>
+	<section id="inline-examples">
 		<header><h2>Inline Code</h2></header>
 		<div class="row">
 			<wijit-code inline>
@@ -218,15 +230,13 @@
 		</div>
 	</section>
 
-	<section class="row">
+	<section class="row" id="indent-highlight">
 		<div>
-			<header><h3>Custom Tab Size (integer)</h3></header>
+			<header><h3>Indent (integer)</h3></header>
 			<wijit-code indent="4">
 				<wijit-code indent="4" >
 					<article>
-						<header>
-							<h1>A Title</h1>
-						</header>
+						<h1>A Title</h1>
 						<p>Some text</p>
 					</article>
 				</wijit-code >
@@ -234,34 +244,51 @@
 		</div>
 
 		<div>
-			<header><h3>Custom Tab Size (css length)</h3></header>
+			<header><h3>Indent (css length)</h3></header>
 			<wijit-code html indent=".5rem">
 				<wijit-code indent=".5rem" >
 					<article>
-						<header>
-							<h1>A Title</h1>
-						</header>
+						<h1>A Title</h1>
 						<p>Some text</p>
 					</article>
 				</wijit-code >
+			</wijit-code>
+		</div>
+
+		<div>
+			<header><h3>Highlight Code</h3></header>
+			<wijit-code highlight="html">
+				<wijit-code highlight="html">
+					<article>
+						<h1>A Title</h1>
+						<p class="foo">Some text</p>
+					</article>
+				</wijit-code>
 			</wijit-code>
 		</div>
 	</section>
 
-	<!-- <script>
-		const textarea = document.querySelector('textarea#demo-ta');
-		const demoResult = document.querySelector('wijit-code#demo-result');
-		const inputs = document.querySelectorAll('input');
-		demoResult.textContent = textarea.value;
+		<wijit-tabs>
+			<wijit-tab open>
+				<b slot="title">Tab A</b>
+				<div class="tab-content">
+					<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+				</div>
+			</wijit-tab>
+			<wijit-tab>
+				<b slot="title">Tab B</b>
+				<div class="tab-content">
+					<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
+				</div>
+			</wijit-tab>
+		</wijit-tabs>
 
-		// Modify content of #demo-result when textarea changes.
-		// Since #demo-result is a wijit-code custom element, this automatically triggers an update
-		textarea.addEventListener ('input', (event) => {
-			demoResult.innerHTML = event.target.value;
-		});
+	<script>
+		const demo = document.querySelector('wijit-code#demo');
+		const inputs = document.querySelectorAll('input');
 
 		// Enable tabbing inside of textarea
-		textarea.addEventListener('keydown', (event) => {
+		/*textarea.addEventListener('keydown', (event) => {
 			if (event.key === 'Tab') {
 				event.preventDefault();
 				const ta = event.target;
@@ -274,19 +301,25 @@
 				const inputEvent = new Event ('input');
 				ta.dispatchEvent(inputEvent);
     		}
-		});
+		});*/
 
-		// Change attribute value of demoResult element.
-		// "#demoResult" is a wijit-code custom element.
+		// Change attributes on demo element.
 		function change(elem, attr) {
 			let value = elem.value;
-			if (elem.type === 'checkbox' || elem.type === 'radio') {
+
+			switch (attr) {
+			case "inline":
 				value = (elem.checked) ? 'true' : 'false';
+				break;
+			case "highlight":
+				// console.log(elem, attr);
+				break;
 			}
 
-			demoResult.setAttribute(attr, value);
+			demo.setAttribute(attr, value);
 		}
 
+		// Convenience functionality for inputs
 		for (const input of inputs) {
 			input.addEventListener('focus', event => {
 				event.target.select();
@@ -302,6 +335,6 @@
 				}
 			})
 		}
-	</script> -->
+	</script>
 </body>
 </html>

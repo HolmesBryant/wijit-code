@@ -931,13 +931,13 @@ export default class WijitForm extends HTMLElement {
 					    wijit-form label.required:after
 					    { color: var(--fail) }
 
-					    /*wijit-form button,*/
+					    wijit-form button,
 					    wijit-form input,
-					    /*wijit-form fieldset,*/
-					    /*wijit-form label,*/
-					    /*wijit-form legend,*/
-					    /*wijit-form option,*/
-					    /*wijit-form select,*/
+					    wijit-form fieldset,
+					    wijit-form label,
+					    wijit-form legend,
+					    wijit-form option,
+					    wijit-form select,
 					    wijit-form textarea
 					    { color: var(--text); }
 
@@ -1053,16 +1053,12 @@ export default class WijitForm extends HTMLElement {
 						{ flex: 1; }
 
 						wijit-form button,
-						wijit-form input,
-						wijit-form select {
+						wijit-form input {
+							max-height: var(--min);
 					    	min-height: var(--min);
 					    	min-width: var(--min);
 					        padding: var(--pad);
 					    }
-
-					    wijit-form button,
-						wijit-form input
-						{ max-height: var(--min); }
 
 					    wijit-form hr {
 							min-width: 100%;
@@ -1132,8 +1128,8 @@ export default class WijitForm extends HTMLElement {
 
 						wijit-form select
 					    {
+					    	max-height: var(--min);
 					    	min-width: 10rem;
-					        padding: var(--pad);
 					    	overflow: auto;
 					    	width: max-content;
 					    }
