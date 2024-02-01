@@ -19,7 +19,12 @@
 			min-width: 300px;
 	    }
 
+	    wijit-tabs wijit-code {
+	    	width: 100%;
+	    }
+
 	    wijit-code[inline] {
+	    	min-width: 50px;
 			overflow: auto;
 	    	padding: .25rem;
 	    }
@@ -93,7 +98,7 @@
 		<section class="row center">
 			<div>
 				<label for="demo-indent">indent</label>
-				<input name="indent" value="2" id="demo-indent" list="demo-indents" oninput="change(this, 'indent')">
+				<input name="indent" value="4" id="demo-indent" list="demo-indents" oninput="change(this, 'indent')">
 				<datalist id="demo-indents">
 					<option>1</option>
 					<option>2</option>
@@ -124,117 +129,121 @@
 			</div>
 		</section>
 		<section>
-			<details>
-				<summary>Javascript</summary>
-				<wijit-code class="demo" highlight="javascript">
-					#! hashbang
+			<wijit-tabs>
+				<button slot="controls">Javascript</button>
+				<article>
+					<wijit-code class="demo" highlight="javascript">
+						#! hashbang
 
-					/**
-					 * @function foo
-					 * @description Does foo things
-					 *
-					 * @param {HTMLElement}	element An HTML element
-					 */
-					function foo (element) {
-						let bar, output = '';
-						const baz = "boom";
-						const result = document.querySelector('#result');
-						const bing = ["one", 123.456, -12.5, +100, "3px", 2^3, 2.5e3, 1.2E-3, 1**2, 0x123, 0xFAF];
+						/**
+						 * @function foo
+						 * @description Does foo things
+						 *
+						 * @param {HTMLElement}	element An HTML element
+						 */
+						function foo (element) {
+							let bar, output = '';
+							const baz = "boom";
+							const result = document.querySelector('#result');
+							const bing = ["one", 123.456, -12.5, +100, "3px", 2^3, 2.5e3, 1.2E-3, 1**2, 0x123, 0xFAF];
 
-						bar = 2 * 3;
+							bar = 2 * 3;
 
-						// This is a comment
-						/*Another comment*/
-						for (const child of element.children) {
-							for (const attr of child.attributes) {
-								output += `${attr.name} -> ${attr.value}\n`;
+							// This is a comment
+							/*Another comment*/
+							for (const child of element.children) {
+								for (const attr of child.attributes) {
+									output += `
+										${attr.name} -> ${attr.value}\n
+										<p id="foo">Some text</p>
+									`;
+								}
 							}
+
+							someElement.addEventListener (
+								'click',
+								event => { console.log(event); }
+							);
+
+							const func = (arg) => arg.toLowerCase();
+
+							return output;
 						}
 
-						someElement.addEventListener('click', event => {
-							console.log(event);
-						});
+						class MyClass {
+							@foo
+							sayHello(name) {
+								return `Hello, ${name}!`;
+							}
+						}
+					</wijt-code>
+				</article>
 
-						const func = (arg) => arg.toLowerCase();
+				<button slot="controls">HTML</button>
+				<article>
+					<wijit-code class="demo" highlight="html">
+						<textarea>
+							<!-- Comment -->
+							<!--A
+								multi-line
+								comment-->
 
-						result.textContent = output;
-					}
-				</wijt-code>
-			</details>
+							<img src="false" onerror="alert('foo')">
 
-			<details>
-				<summary>HTML</summary>
-				<wijit-code class="demo" highlight="html">
-					<textarea>
-						<!-- Comment -->
-						<!--A
-							multi-line
-							comment-->
+							<p class="some-class">Some Text</p>
+							<div>
+								<label for="test-number" data-foo="" id=foo>Number</label>
 
-						<img src="false" onerror="alert('foo')">
+								<input
+									name="input"
+									value="2"
+									id="test-number"
+									list="test-numbers"
+									oninput="doSomething(event)">
 
-						<p class="some-class">Some Text</p>
-						<div>
-							<label for="test-number" data-foo="" id=foo>Number</label>
+								<datalist id="test-numbers">
+									<option>1</option>
+									<option>123.456</option>
+									<option>-12.5</option>
+									<option>+100</option>
+									<option>3px</option>
+									<option>2.5e3</option>
+									<option>1.2e-3</option>
+									<option>0x123</option>
+									<option>9.876E-9</option>
+									<option>0xFAF</option>
+								</datalist>
+							</div>
 
-							<input
-								name="input"
-								value="2"
-								id="test-number"
-								list="test-numbers"
-								oninput="doSomething(event)">
-
-							<datalist id="test-numbers">
-								<option>1</option>
-								<option>123.456</option>
-								<option>-12.5</option>
-								<option>+100</option>
-								<option>3px</option>
-								<option>2.5e3</option>
-								<option>1.2e-3</option>
-								<option>0x123</option>
-								<option>9.876E-9</option>
-								<option>0xFAF</option>
-							</datalist>
-						</div>
-					</textarea>
-				</wijit-code>
-			</details>
+							<wijit-code highlight="html">
+								<article>
+									<h1>A Title</h1>
+									<p class="foo">Some text</p>
+								</article>
+							</wijit-code>
+						</textarea>
+					</wijit-code>
+				</article>
+			</wijit-tabs>
 		</section>
 	</wijit-form>
 
-	<section id="inline-examples">
+	<section id="inline-example">
 		<header><h2>Inline Code</h2></header>
 		<div class="row">
 			<wijit-code inline>
 				<wijit-code inline="true" >...</wijit-code >
 			</wijit-code>
-		</div>
-		<div>
+
 			<p>Some text <wijit-code inline> function foo() {}</wijit-code> some more text.</p>
-		</div>
-		<div class="row">
-			<wijit-code inline>
-				function foo (baz, bam) {
-					for (const bar of baz) {
-						for (const boom of bam) {
-							if (bar === boom) {
-								value = bam;
-							} else {
-								value = baz;
-							}
-						}
-					}
-				}
-			</wijit-code>
 		</div>
 	</section>
 
-	<section class="row" id="indent-highlight">
+	<section class="row" id="examples">
 		<div>
 			<header><h3>Indent (integer)</h3></header>
-			<wijit-code indent="4">
-				<wijit-code indent="4" >
+			<wijit-code indent="2">
+				<wijit-code indent="2" >
 					<article>
 						<h1>A Title</h1>
 						<p>Some text</p>
@@ -268,23 +277,8 @@
 		</div>
 	</section>
 
-		<wijit-tabs>
-			<wijit-tab open>
-				<b slot="title">Tab A</b>
-				<div class="tab-content">
-					<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-				</div>
-			</wijit-tab>
-			<wijit-tab>
-				<b slot="title">Tab B</b>
-				<div class="tab-content">
-					<p>Lorem ipsum dolor sit amet, consectetur adipisicing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.</p>
-				</div>
-			</wijit-tab>
-		</wijit-tabs>
-
 	<script>
-		const demo = document.querySelector('wijit-code#demo');
+		const demos = document.querySelectorAll('wijit-code.demo');
 		const inputs = document.querySelectorAll('input');
 
 		// Enable tabbing inside of textarea
@@ -316,7 +310,9 @@
 				break;
 			}
 
-			demo.setAttribute(attr, value);
+			for (const demo of demos) {
+				demo.setAttribute(attr, value);
+			}
 		}
 
 		// Convenience functionality for inputs

@@ -21,23 +21,7 @@ export default {
 		return ranges;
 	},
 	comment: /\#\!.*|\/\/.*|\/\*(?!\*\/)[\s\S]+?\*\//gm,
-	decorator:  /\b@\w+(?:\([^)]*\))?\b/g,
-	function: function(string, node) {
-		let ranges = [];
-		const regex = /(?<!\w)\bfunction\s+([^\s(]+)|^\s+(?:(?!do|while|for)\b)([^\s(]+)\s*\(/gm;
-		const matches = string.matchAll(regex);
-		for (const item of matches) {
-			if (!item[0]) continue;
-			const word = item.flat().filter(value => value && value.trim()).pop();
-			const re = new RegExp(`\\b${word}\\b`);
-			const start = item.index + item[0].search(re);
-			const range = new Range();
-			range.setStart(node, start);
-			range.setEnd(node, start + word.length);
-			ranges.push(range);
-		}
-		return ranges;
-	},
+	function: /(?<=\(|\b)\w+\s*\(|\(|\)/g,
 	number: /[+-]?\d+[\^\b\.\w]*/g,
 	operator: /\+|-|(?<!(\/|\/\*{1,}|\n\s*))\*(?!\/)|(?<![\/\*])\/(?![\/\*])|%|===|!==|>=|<=|>|<|!=|=|&&|\|\||(?<!#)!/g,
 	string: /["'`][^"'`]*["'`]/g,
@@ -69,6 +53,7 @@ export default {
 		'ErrorEvent',
 		'EventSource',
 		'External',
+		'external',
 		'FormDataEvent',
 		'HTMLAllCollection',
 		'HTMLAnchorElement',
@@ -160,6 +145,7 @@ export default {
 		'MimeTypeArray',
 		'NavigateEvent',
 		'Navigation',
+		'navigation',
 		'NavigationActivation',
 		'NavigationCurrentEntryChangeEvent',
 		'NavigationDestination',
@@ -231,64 +217,6 @@ export default {
 		'Text',
 		'TreeWalker',
 		'UIEvent',
-
-		// DOM Methods
-		'appendChild',
-		'getBoundingClientRect',
-		'.closest',
-		'cloneNode',
-		'createTextNode',
-		'dispatchEvent',
-		'getElementsByClassName',
-		'getElementsByTagName',
-		'getElementById',
-		'getAttribute',
-		'getBoundingClientRect',
-		'getComputedStyle',
-		'hasAttribute',
-		'hasChildNodes',
-		'importNode',
-		'insertBefore',
-		'isConnected',
-		'matches',
-		'normalize',
-		'offsetLeft',
-		'offsetTop',
-		'querySelector',
-		'querySelectorAll',
-		'removeAttribute',
-		'removeChild',
-		'replaceChild',
-		'scrollIntoView',
-		'scrollTo',
-		'setAttribute',
-		'addEventListener',
-		'removeEventListener',
-
-		// DOM Properties
-		'.attributes',
-		'.childNodes',
-		'.firstChild',
-		'.id',
-		'.innerHTML',
-		'.lastChild',
-		'.nextSibling',
-		'.nodeName',
-		'.nodeType',
-		'.nodeValue',
-		'.ownerDocument',
-		'.parentElement',
-		'.parentNode',
-		'.previousSibling',
-		'.style',
-		'.textContent',
-		'.className',
-		'.dataset',
-		'.elements',
-		'.innerText',
-		'.innerHTML',
-		'.outerHTML',
-		'.tagName',
 
 		// ecma keywords
 		'as',

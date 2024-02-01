@@ -35,6 +35,7 @@ body {
     summary
     { background-color: var(--bg2) }
 
+    details[open] > summary,
     summary:hover
     { background-color: var(--accent) }
 

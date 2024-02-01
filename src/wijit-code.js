@@ -64,7 +64,7 @@ export class WijitCode extends HTMLElement {
 	 * @description The number of spaces to represent a tab character. Can use most css length values.
 	 * @comment Has public getter (indent)
 	 */
-	#indent = 2;
+	#indent = 4;
 
 	/**
 	 * @private
