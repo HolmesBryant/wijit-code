@@ -5,16 +5,15 @@ export default {
 		const matches = string.matchAll(regex);
 
 		for (const match of matches) {
-			let thisStart, range;
-			const startIdx = match.index;
+			const idx = match.index;
 			const items = match[0].split(',').map (item => item.replace(/[()]/g, '').trim());
 			for (const item of items) {
 				// avoid partial matches which indexOf would trip on
 				const re = new RegExp('\\b' + item + '\\b');
-				thisStart = startIdx + match[0].search(re);
-				range = new Range();
-				range.setStart (node, thisStart);
-				range.setEnd (node, thisStart + item.length);
+				const start = idx + match[0].search(re);
+				const range = new Range();
+				range.setStart (node, start);
+				range.setEnd (node, start + item.length);
 				ranges.push(range);
 			}
 		}

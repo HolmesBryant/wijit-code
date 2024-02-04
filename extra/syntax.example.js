@@ -43,11 +43,11 @@ export default {
 	attribute: null,
 	comment: null,
 	function: function(string, node) {
-	    let match;
+	    let match, range;
 	    const ranges = [];
-		const regex = /\b[^(]\(/g;
-	    while ((match = regex.exec(string))) {
-			const range = new Range();
+		const regex = /<\/?[^>]+>/g;
+	    while (match = regex.exec(string)) {
+			range = new Range();
 			range.setStart(node, match.index);
 			range.setEnd(node, match.index + match[0].length);
 			ranges.push(range);

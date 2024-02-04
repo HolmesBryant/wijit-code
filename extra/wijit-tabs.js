@@ -6,6 +6,9 @@
  *	Controls are optional. You don't have to include them if you don't want them.
  *	The panels can also be swiped on touch devices.
  *
+ * @author Holmes Bryant <webbmaastaa@gmail.com>
+ * @license GPL-3.0
+ *
  * @property {string} effect - The effect to use for the carousel. Valid values are "slide", "fade", and "flip".
  * @property {boolean} auto - Whether to automatically play the carousel.
  * @property {number} repeat - The number of times to repeat the carousel.
@@ -66,10 +69,10 @@ export class WijitTabs extends HTMLElement {
 	#autocontrols = false;
 
 	/**
-	 * The class to add to the active control.
+	 * The class to add to the active tab.
 	 * @private
 	 */
-	#activeindicator = 'active-control';
+	#activeindicator = 'active-tab';
 
 	/**
 	 * The shadow root of the custom element.
@@ -126,6 +129,7 @@ export class WijitTabs extends HTMLElement {
 			:host {
 				display: block;
 				height: 100%;
+				position: relative;
 				scroll-behavior: smooth;
 				width: 100%;
 				--speed: ${this.speed}s;
@@ -188,10 +192,12 @@ export class WijitTabs extends HTMLElement {
 			}
 
 			#controls {
-				display: grid;
-				grid-auto-flow: column;
-				grid-auto-columns: 1fr;
+				display: flex;
+				flex-wrap: wrap;
+				align-items: flex-end;
+
 			}
+
 			.hidden { display: none; }
 
 			/* Touch devices */

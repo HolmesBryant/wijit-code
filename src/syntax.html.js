@@ -4,7 +4,7 @@ export default {
 	function: null,
 	keyword: null,
 	number: /[+-]?\d+[\b\.\w]*/g,
-	operator: null,
+	operator: /=/g,
 	string: /["'][^"']*["']/g,
 	tag: function (string, node) {
 		const ranges = [];
