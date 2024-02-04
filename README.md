@@ -20,8 +20,10 @@ As of this writing (2024-02-04), Firefox requires you to set a custom flag in or
 - Customize the amount of indentation within a code block.
 - Display the code inline or as a block.
 - Can highlight HTML or Javascript code out of the box.
-- Easy system for making your own syntax highlighters.
+- The highlighter does not inject any spans (or other elements) into your code.
 - Uses the CSS Custom Highlight API.
+- Define custom color palettes on a per-instance basis.
+- Easy system for making your own syntax highlighters.
 
 ## Available Attributes ##
 
@@ -41,8 +43,9 @@ As of this writing (2024-02-04), Firefox requires you to set a custom flag in or
 	  Ideally, this file should be located in the same directory as wijit-code.js.
 	  The value "false" will negate the effect, as if the attribute were not present at all.
 
-	- **Keywords:** If you give the highlight attribute a value which is a keyword, such as "html", the component will look for a file named "syntax.html.js" in the **same folder** as wigit-code.js, and try to import it.
-	Make sure you have the appropriate syntax file in this folder.
+	- **Keywords:** You can provide a simple keyword, such as "html" or "javascript".
+   		- The component will look for a file named "syntax.[keyword].js" in the **same folder** as wigit-code.js, and try to import it.
+		- Make sure you have the appropriate syntax file in this folder.
 
 	- **URLs:** Alternatively, you can provide a network url or a file path.
 		- If you are importing over a network, you should include the appropriate protocol such as "http://" or "https://".
