@@ -6,10 +6,12 @@ Demo: [https://holmesbryant.github.io/wijit-code/](https://holmesbryant.github.i
 
 ## Note ##
 
-This component makes use of some fairly modern features such as: Dynamic Imports and the CSS Custom Highlight API. If you must support older browsers, please test thoroughly before deploying. As of this writing (2024-02-04), Firefox requires you to set a custom flag in order to enable this feature. In Chrome and Edge it is already enabled. Other browsers have not been tested.
-	- In Firefox, enter "about:config" in the address bar.
-	- In the field labeled "Search preference name", enter "dom.customHighlightAPI.enabled"
-	- set dom.customHighlightAPI.enabled to "true"
+This component makes use of some fairly modern features such as: Dynamic Imports and the CSS Custom Highlight API. If you must support older browsers, please test thoroughly before deploying. 
+
+As of this writing (2024-02-04), Firefox requires you to set a custom flag in order to enable this feature. In Chrome and Edge it is already enabled. Other browsers have not been tested.
+ - In Firefox, enter "about:config" in the address bar.
+ - In the field labeled "Search preference name", enter "dom.customHighlightAPI.enabled"
+ - set dom.customHighlightAPI.enabled to "true"
 
 ## Features ##
 
