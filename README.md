@@ -207,7 +207,8 @@ If you add a new property name, you will need to add a new color palette entry w
 	}
 
 	//scripts.js
-	customElements.whenDefined(() => {
+	customElements.whenDefined('wijit-code')
+	.then (() => {
 		const instance = document.querySelector('wijit-code#instance');
 		instance.palette.set("newProperty", "LemonChiffon");
 	});
