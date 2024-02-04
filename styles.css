@@ -27,7 +27,11 @@ body {
     }
 }
 
-@layer doc {
+@media (max-width: 300px) {
+	* { padding: 0; }
+}
+
+
 
 /**** Backgrounds ****/
 
@@ -35,10 +39,17 @@ body {
     summary
     { background-color: var(--bg2) }
 
-    summary:hover
+	button
+	{ background-color: var(--bg3) }
+
+    button:hover,
+    button.active-tab,
+    summary:hover,
+    details[open] > summary
     { background-color: var(--accent) }
 
 /**** Borders ****/
+	button,
 	details
 	{ border: 1px solid var(--border); }
 
@@ -48,7 +59,18 @@ body {
     summary
     { border-radius: .5rem; }
 
+    wijit-tabs button
+    { border-radius: .5rem .5rem 0 0 }
+
 /**** Text ****/
+	button
+	{ color: var(--text) }
+
+	button.active-tab
+	{
+		font-size: larger;
+		font-weight: bold;
+	}
 
 	summary
 	{
@@ -62,6 +84,9 @@ body {
 	{ cursor: pointer; }
 
 /**** Structure ****/
+	button {
+		padding: .5rem;
+	}
 
 	details
 	{ overflow: auto; }
@@ -112,9 +137,6 @@ body {
 		z-index: 1;
 	}
 
-	wijit-form textarea
-    { min-height: 22rem; }
-
 	.row {
 		flex-direction: row;
 		flex-wrap: wrap;
@@ -122,4 +144,15 @@ body {
 		overflow: auto;
 	}
 
-} /* @layer */
+	.sticky {
+		position: sticky;
+		top: 0;
+		z-index: 10;
+	}
+
+	#instructions {
+		padding: 1rem;
+		text-indent: 3em;
+		white-space:pre-wrap;
+	}
+
