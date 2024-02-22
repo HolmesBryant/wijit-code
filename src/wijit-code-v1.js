@@ -13,8 +13,7 @@
  *   }
  * </wijit-code>
  */
-
-export default class WijitCode extends HTMLElement {
+export class WijitCode extends HTMLElement {
 
 	/**
 	 * @private
@@ -22,8 +21,6 @@ export default class WijitCode extends HTMLElement {
 	 * @description Used to remove event listeners when element is disconnected.
 	 */
 	#abortController = new AbortController();
-
-	#editorAbortController = new AbortController();
 
 	/**
 	 * @private
@@ -83,6 +80,13 @@ export default class WijitCode extends HTMLElement {
 	#needsUpdate = false;
 
 	/**
+	 * @private
+	 * @type MutationObserver
+	 * @description Used to manage mutation events.
+	 */
+	mutationObserver;
+
+	/**
 	 * @static
 	 * @type string[]
 	 * @description A list of attributes to observe for changes.
@@ -95,7 +99,6 @@ export default class WijitCode extends HTMLElement {
 	 */
 	constructor() {
 		super();
-		// this.contentNode = this;
 		this.attachShadow({mode:'open'});
 		this.shadowRoot.innerHTML = `
 			<style>
@@ -106,38 +109,10 @@ export default class WijitCode extends HTMLElement {
 					vertical-align: middle;
 				}
 
-				div {
-					position: relative;
-					font-family: "Courier New", monospace;
-				}
-
 				pre
 				{
-					font-family: "Courier New", monospace;
-					margin: 0;
 					tab-size: var(--indent);
-				}
-
-				textarea {
-					all: inherit;
-					bottom: 0;
-					caret-color: white;
-					color: transparent;
-					display: block;
-					height: 100%;
-					overflow-y: hidden;
-					position: absolute;
-					tab-size: var(--indent);
-					top: 0;
-					width: 100%;
-				}
-
-				textarea:focus {
-					outline: 2px dashed silver;
-				}
-
-				.hidden {
-					display: none;
+					white-space: pre-wrap;
 				}
 
 				.inline {
@@ -147,10 +122,7 @@ export default class WijitCode extends HTMLElement {
 				}
 			</style>
 
-			<div>
-				<pre><slot></slot></pre>
-				<textarea class="hidden" spellcheck="false"></textarea>
-			</div>
+			<pre spellcheck="false"><slot></slot></pre>
 		`;
 	}
 
@@ -159,6 +131,8 @@ export default class WijitCode extends HTMLElement {
 	 * @remarks Perform initial setup and establish event listeners after the element is connected.
 	 */
 	connectedCallback() {
+		// if (!this.hasAttribute('test')) return;
+		const container = this.shadowRoot.querySelector('pre');
 		const slot = this.shadowRoot.querySelector ('slot');
 		this.contentNode = this.shadowRoot.querySelector ('pre');
 		this.textContent = this.resetSpaces(this.getContent());
@@ -166,7 +140,7 @@ export default class WijitCode extends HTMLElement {
 
 		slot.addEventListener('slotchange', () => {
 			this.updateIfNeeded();
-	    }, { signal:this.#abortController.signal });
+	    }, this.#abortController.signal);
 	}
 
 	/**
@@ -181,6 +155,7 @@ export default class WijitCode extends HTMLElement {
 	 */
 	disconnectedCallback () {
 		this.#abortController.abort();
+		this.observer.disconnect();
 	}
 
 	/**
@@ -191,12 +166,12 @@ export default class WijitCode extends HTMLElement {
      *              is needed on the next call to this method. This helps prevent
      *              redundant updates during rapid slot changes.
 	 */
-	updateIfNeeded(delay = 500, elem = this) {
+	updateIfNeeded(delay = 500) {
 		const currentTime = Date.now();
 		if (this.#needsUpdate) {
 			if (currentTime - this.#lastMutationTime > delay) {
 			    this.#lastMutationTime = currentTime;
-				this.textContent = this.resetSpaces(this.getContent(elem));
+				this.textContent = this.resetSpaces(this.getContent());
 				if (this.highlighter) this.destroyHighlights();
 				if (this.highlight) this.highlightCode();
 			}
@@ -208,30 +183,26 @@ export default class WijitCode extends HTMLElement {
 	/**
 	 * Highlights code using a specified syntax and applies it to an element.
 	 *
-	 * @param 	{string} 		syntax 	- The syntax to use for highlighting.
-	 * @param 	{HTMLElement}	element - The element to highlight.
-	 * @returns {Highlighter}			- Instance of Highlighter object.
-	 * @throws 	{Error}					- Throws Error if highlighter.highlight() fails.
-	 *
-	 * @test self.highlightCode('html', self) // true
+	 * @param {string} syntax 		- The syntax to use for highlighting.
+	 * @param {HTMLElement} element - The element to highlight.
 	 */
-	async highlightCode (syntax = this.highlight, element = this) {
+	highlightCode (syntax, element) {
+		syntax = syntax || this.highlight;
+		element = element || this;
 		this.highlighter = this.highlighter || new Highlighter(element);
 		try {
-	    	return await this.highlighter.highlight(syntax, element.childNodes[0])
+	    	this.highlighter.highlight(syntax, this.childNodes[0]);
 		} catch (error) {
-			throw error;
+			console.error (error);
 		}
 	}
 
 	/**
 	 * Destroys all current highlights.
-	 * @returns {string} The suffix used to identify the highlights used by this instance in the CSS HighlightRegistry
-	 * @test self.destroyHighlights() // self.highlighter.suffix;
 	 */
 	destroyHighlights () {
 		try {
-			return this.highlighter.removeAll();
+			this.highlighter.removeAll();
 		} catch (error) {
 			console.error (error);
 		}
@@ -250,7 +221,6 @@ export default class WijitCode extends HTMLElement {
 	 *          - Determine the number of leading whitespaces in the last line.
 	 *          - Create a regular expression to match the leading whitespace.
 	 *          - Remove the leading whitespace from each line and return the formatted code as a string.
-	 * @test self.resetSpaces('\t\t\tfoo\t\t\t') // 'foo'
 	 */
 	resetSpaces (string) {
 		this.needsUpdate = false;
@@ -270,78 +240,68 @@ export default class WijitCode extends HTMLElement {
 	 *
 	 * @param 	{HTMLElement} [elem] 	- The element from which to retrieve the content.
 	 * @returns {string} 				- The content of the element.
-	 *
-	 * @test self.getContent (self) // ""
 	 */
-	getContent (elem = this) {
-		if (elem.localName === 'textarea') return elem.value;
+	getContent (elem) {
+		elem = elem || this;
 		const ta = elem.querySelector ('textarea');
-		const content = (ta) ? ta.value : this.convertHTML(elem.innerHTML);
+		const content = (ta) ? ta.value : this.unencodeHtmlEntities(elem.innerHTML);
 		if (ta) ta.remove();
 		return content;
 	}
 
 	/**
-	 * Converts any string that would be rendered in the browser into plain text.
+	 * Decodes HTML entities in the given encoded text.
 	 *
-	 * @param 	{string} html 	Any string
-	 * @returns {string} 		The html converted into plain text that will not be rendered.
-	 * @test self.convertHTML('<script>alert("foo")</script>') // '\x3Cscript>alert("foo")\x3C/script>'
+	 * @param 	{string} [encodedText] 	- The text with HTML entities encoded.
+	 * @returns {string} 				- The decoded text.
 	 */
-	convertHTML(html) {
+	unencodeHtmlEntities(encodedText) {
 		const elem = document.createElement('textarea');
-		elem.innerHTML = html;
+		elem.innerHTML = encodedText;
 		return elem.value;
 	}
 
 	/**
-	 * Enables editing.
+	 * Enables editing for the specified element.
+	 * If no element is provided, it enables editing for `this.contentNode`.
+	 *
+	 * @param {HTMLElement} [element] - The element to enable editing for.
+	 * @param {number} [delay=1000] - The delay (in milliseconds) before triggering an update.
 	 */
-	enableEdit () {
-		const ta = this.shadowRoot.querySelector('textarea');
-		ta.classList.remove('hidden');
-		ta.value = this.textContent;
-		this.interceptKeyPress (ta);
-		ta.addEventListener ('input', (event) => {
-			this.updateIfNeeded(500, event.target)
-		}, { signal:this.#editorAbortController.signal });
+	enableEdit (element, delay = 1000) {
+		element = element || this.contentNode;
+		const config = { childList: true, characterData: true, subtree: true};
+		const callback = (mutations) => {
+			const currentTime = Date.now();
+		    if (currentTime - this.#lastMutationTime > delay) {
+		        this.#lastMutationTime = currentTime;
+		        this.updateIfNeeded ();
+		    }
+		}
+
+		if (!this.mutationObserver) this.mutationObserver = new MutationObserver (callback);
+		element.setAttribute('contenteditable', 'true');
+		this.mutationObserver.observe (element, config);
 	}
 
 	/**
-	 * Disables editing.
+	 * Disables editing for the specified element.
+	 * If no element is provided, it disables editing for `this.contentNode`.
+	 *
+	 * @param {HTMLElement} 		[element]			- The element to disable editing for.
+	 * @param {MutationObserver} 	[mutationObserver]	- The MutationObserver instance to disconnect.
 	 */
-	disableEdit () {
-		const ta = this.shadowRoot.querySelector('textarea');
-		ta.classList.add('hidden');
-		this.editorAbortController.abort();
-	}
-
-	interceptKeyPress (element) {
-		element.addEventListener ('keydown', event => {
-			switch (event.key) {
-			case 'Tab':
-				event.preventDefault();
-			    const ta = event.target;
-				const start = ta.selectionStart;
-				const end = ta.selectionEnd;
-				const before = ta.value.substring(0, start);
-				const after = ta.value.substring(end);
-				ta.value = before + "\t" + after;
-				ta.selectionStart = ta.selectionEnd = start + 1;
-				const inputEvent = new Event ('input');
-				ta.dispatchEvent(inputEvent);
-			    break;
-			}
-
-		}, { signal: this.#editorAbortController.signal });
+	disableEdit (element, mutationObserver) {
+		element = element || this.contentNode;
+		mutationObserver = mutationObserver || this.mutationObserver;
+		element.removeAttribute ('contenteditable');
+		if (mutationObserver) mutationObserver.disconnect();
 	}
 
 	/**
 	 * Gets the value of the inline property
 	 *
-	 * @returns {boolean} The value of the inline property.
-	 *
-	 * @test typeof self.inline === 'boolean'  // true
+	 * @returns {boolean | string} The value of the inline property.
 	 */
 	get inline () { return this.#inline; }
 
@@ -352,24 +312,22 @@ export default class WijitCode extends HTMLElement {
 	 * @remarks Handle different input values for the inline property:
 	 *          - Empty string, 'true', or true: Set to true and apply inline styling.
 	 *          - Any other value: Set to false and remove inline styling.
-	 *
-	 * @test (self => {self.inline = 'false'; return self.inline})(self) // false
 	 */
 	set inline (value) {
 		const node = this.shadowRoot.querySelector('pre');
 		switch (value) {
-		case 'false':
-		case false:
+		case '':
+		case 'true':
+		case true:
+			value = true;
+			if (node) node.classList.add('inline');
+			break;
+		default:
 			value = false;
 			this.removeAttribute('inline');
 			if (node) node.classList.remove('inline');
 			break;
-		default:
-			value = true;
-			if (node) node.classList.add('inline');
-			break;
 		}
-
 		this.#inline = value;
 	}
 
@@ -377,7 +335,6 @@ export default class WijitCode extends HTMLElement {
 	 * Gets the value of the indent property
 	 *
 	 * @returns {string | number} The value of the indent property.
-	 * @test (typeof self.indent === 'string' || typeof self.indent === 'number') // true
 	 */
 	get indent () { return this.#indent; }
 
@@ -385,9 +342,6 @@ export default class WijitCode extends HTMLElement {
 	 * Sets the tab size for the code block, affecting its indentation.
 	 *
 	 * @param {string | number} value - The width of a tab character. Can take numbers or most css length measurements.
-	 *
-	 * @test (self => {self.indent = '2rem'; return self.indent})(self) // '2rem'
-	 * @test (self => {self.setAttribute('indent', '5'); return self.indent})(self) // '5'
 	 */
 	set indent (value) {
 		this.style.setProperty('--indent', value);
@@ -408,8 +362,8 @@ export default class WijitCode extends HTMLElement {
 	 */
     set highlight (value) {
     	switch (value) {
+    	case '':
     	case 'false':
-    	case false:
     		value = false;
     		break;
     	}
@@ -432,24 +386,18 @@ export default class WijitCode extends HTMLElement {
      *                        Any other string disables editing.
      */
     set edit (value) {
+		const elem = this.contentNode || this.shadowRoot.querySelector('pre');
     	switch (value) {
-    	case 'false':
-    	case false:
-    		this.#edit = false;
-    		if (this.contentNode) this.disableEdit();
+    	case '':
+    	case 'true':
+    		this.#edit = true;
+    		this.enableEdit(elem);
     		break;
     	default:
-    		this.#edit = true;
-    		if (this.contentNode) {
-	    		this.enableEdit();
-    		} else {
-    			customElements.whenDefined (this.localName)
-    			.then (cls => {
-    				this.enableEdit();
-    			})
-    		}
-    		break;
+    		this.#edit = false;
+    		this.disableEdit(elem);
     	}
+    	console.log(this.#edit)
     }
 
     /**
@@ -481,7 +429,7 @@ export default class WijitCode extends HTMLElement {
 
 /**
  * @class Highlighter
- * @summary Uses CSS Custom Highlight API to highlight ranges of text in different colors.
+ * @description Uses CSS Custom Highlight API to highlight ranges of text in different colors.
  * @author Holmes Bryant <webbmaastaa@gmail.com>
  * @license GPL-3.0
  */
@@ -508,7 +456,6 @@ export class Highlighter {
 		*/
 	constructor (element, palette) {
 		this.container = element;
-		this.palette = palette;
 		return this;
 	}
 
@@ -518,26 +465,23 @@ export class Highlighter {
 	 * @param {Text} [textNode] - The text node to highlight. If not provided, uses the first child node of the container element.
 	 * @throws {Error} - If the browser does not support CSS Custom Highlight API.
 	 */
-	async highlight(syntax, textNode) {
-		if (typeof window.Highlight === 'undefined') {
-			console.error('Browser does not support CSS Custom Highlight API');
-			return false;
-		}
+	highlight (syntax, textNode) {
+		if (typeof window.Highlight === undefined) {
+    		console.error('Browser does not support CSS Custom Highlight API');
+    		return;
+    	}
 
-		textNode = textNode || this.container.childNodes[0] || document.createTextNode('');
+		textNode = textNode || this.container.childNodes[0];
 
-		const styleId = `highlights${this.suffix}`;
-		const existingStyle = document.head.querySelector(`#${styleId}`);
-		if (!existingStyle) document.head.append(this.getStyle());
+	    // inserting ::highlight styles into a custom element's shadowRoot doesn't seem to work in Firefox
+	    // this.element.shadowRoot.prepend (this.getStyle());
+	    const style = document.head.querySelector(`#highlights${this.suffix}`);
+	    if (!style) document.head.append (this.getStyle());
 
-		try {
-			const defs = await this.getSyntax(syntax);
-			this.highlightCode(defs, textNode);
-			return true;
-		} catch (error) {
-			console.error('Error loading Highlight Syntax: ', error);
-			throw error;
-		}
+        this.getSyntax (syntax).then ( response => {
+        	const defs = response.default || response;
+        	this.highlightCode(defs, textNode);
+        });
 	}
 
 	/**
@@ -547,20 +491,20 @@ export class Highlighter {
 	 * @returns {Promise<Syntax>} - A promise that resolves to the syntax object.
 	 * @throws {Error} - If there was an error loading the syntax module.
 	 */
-	async getSyntax (syntax = 'html') {
+	async getSyntax (syntax) {
 		if (typeof syntax === 'string') {
+			try {
 	        	let url = syntax;
 	        	const regex = /^(http|\.|\/)/;
 	        	if (!regex.test (syntax)) url = `./syntax.${syntax}.js`;
-			try {
 				syntax = await import (url);
 			} catch (error) {
 				console.error ("Error loading Highlight Syntax: ", error);
-				return error;
+				throw error;
 			}
 		}
 
-		return syntax.default;
+		return syntax;
 	}
 
 	/**
@@ -602,7 +546,7 @@ export class Highlighter {
             this.setHighlight(ranges, prop);
         }
 
-        return true;
+        return ranges;
     }
 
     /**
@@ -653,13 +597,8 @@ export class Highlighter {
     	// Otherwise, highlights between instances interfere with each other
     	type = type + this.suffix;
         const highlighter = new Highlight(...ranges);
-        try {
-	        CSS.highlights.set (type, highlighter);
-        	return true;
-        } catch (error) {
-        	console.error (error);
-        	throw error;
-        }
+        CSS.highlights.set (type, highlighter);
+        return highlighter;
     }
 
     /**
@@ -689,7 +628,6 @@ export class Highlighter {
 
     /**
 	 * Removes all highlights associated with the current suffix.
-	 * @returns {string} The suffix used to identify highlights on an instance
 	 */
     removeAll () {
     	CSS.highlights.forEach ((highlight, name) => {
@@ -697,8 +635,6 @@ export class Highlighter {
     			CSS.highlights.delete (name);
     		}
     	});
-
-    	return this.suffix;
     }
 
     /**

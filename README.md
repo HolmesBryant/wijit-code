@@ -51,7 +51,7 @@ As of this writing (2024-02-04), Firefox requires you to set a custom flag in or
 		- If you are importing over a network, you should include the appropriate protocol such as "http://" or "https://".
 		If the file you are importing is located on a different domain, make sure the server hosting the file allows cross-origin resource sharing (CORS).
 		Example: "https://mydomain/path/to/file.js"
-		- If you are importing a file path, the path should begin with "/", "./", or "../".
+		- If you are importing a file path, the path should begin with "/", "./", or "../" AND must be be somewhere inside the Document Root.
 		Example: "../parentFolder/otherFolder/syntax.html.js"
 
 - **palette** (default: null) | Acceptable values [JSON parsable string]
@@ -59,7 +59,7 @@ As of this writing (2024-02-04), Firefox requires you to set a custom flag in or
 	The value of this attribute must be a valid JSON string representing a two-dimensional array of key => value pairs.
 	The keys correspond to the properties defined in the syntax file.
 	The values can be any valid css color value.
-	Example: [["tag", "red"], "function", "blue"]]
+	Example: [["tag", "red"], ["function", "blue"]]
 	- You may also define a custom palette using javascript.
 	The process is described below.
 

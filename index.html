@@ -107,7 +107,7 @@
 						let bar, output = '';
 						const baz = "boom";
 						const result = document.querySelector('#result');
-						const bing = ["one", 123.456, -12.5, +100, "3px", 2^3, 2.5e3, 1.2E-3, 1**2, 0x123, 0xFAF];
+						const bing = ["one", "123.456", -12.5, +100, "3px", 2^3, 2.5e3, 1.2E-3, 1**2, 0x123, 0xFAF];
 
 						bar = 2 * 3;
 
@@ -165,7 +165,7 @@
 
 							<datalist id="test-numbers">
 								<option>1</option>
-								<option>123.456</option>
+								<option>"123.456"</option>
 								<option>-12.5</option>
 								<option>+100</option>
 								<option>3px</option>
@@ -227,13 +227,15 @@
 
 		<div>
 			<header><h3>Highlight Code using Keyword</h3></header>
-			<wijit-code highlight="html">
-				<wijit-code highlight="html">
-					<article>
-						<h1>A Title</h1>
-						<p class="foo">Some text</p>
-					</article>
-				</wijit-code>
+			<wijit-code id="editable" highlight="html" edit>
+				<textarea>
+					<wijit-code highlight="html">
+						<article>
+							<h1>A Title</h1>
+							<p class="foo">Some text</p>
+						</article>
+					</wijit-code>
+				</textarea>
 			</wijit-code>
 		</div>
 
