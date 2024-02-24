@@ -95,7 +95,6 @@ export default class WijitCode extends HTMLElement {
 	 */
 	constructor() {
 		super();
-		// this.contentNode = this;
 		this.attachShadow({mode:'open'});
 		this.shadowRoot.innerHTML = `
 			<style>
@@ -111,8 +110,7 @@ export default class WijitCode extends HTMLElement {
 					font-family: "Courier New", monospace;
 				}
 
-				pre
-				{
+				pre {
 					font-family: "Courier New", monospace;
 					margin: 0;
 					tab-size: var(--indent);
@@ -181,15 +179,15 @@ export default class WijitCode extends HTMLElement {
 	 */
 	disconnectedCallback () {
 		this.#abortController.abort();
+		this.#editorAbortController.abort();
 	}
 
 	/**
-	 * Updates the text content of the element if slot changes have occurred.
-	 * @param {number} [delay] The time delay within which to ignore changes.
-	 * @remarks If a previous slot change indicated a content update was needed, perform the update
-	 *			If a slot change just occurred, set a flag to indicate an update
-     *              is needed on the next call to this method. This helps prevent
-     *              redundant updates during rapid slot changes.
+	 * Updates the text content of the element if needed.
+	 * @param {number} 		delay 	The time delay within which to ignore changes.
+	 * @param {HTMLElement} elem 	The element whose content should be normalized.
+	 * @remarks Sets a flag to indicate an update is needed on the next call to this method.
+	 *          This helps prevent redundant updates during rapid changes.
 	 */
 	updateIfNeeded(delay = 500, elem = this) {
 		const currentTime = Date.now();
@@ -210,10 +208,10 @@ export default class WijitCode extends HTMLElement {
 	 *
 	 * @param 	{string} 		syntax 	- The syntax to use for highlighting.
 	 * @param 	{HTMLElement}	element - The element to highlight.
-	 * @returns {Highlighter}			- Instance of Highlighter object.
 	 * @throws 	{Error}					- Throws Error if highlighter.highlight() fails.
 	 *
 	 * @test self.highlightCode('html', self) // true
+	 * @test self.highlightCode('foo', self) // false
 	 */
 	async highlightCode (syntax = this.highlight, element = this) {
 		this.highlighter = this.highlighter || new Highlighter(element);
@@ -221,6 +219,7 @@ export default class WijitCode extends HTMLElement {
 	    	return await this.highlighter.highlight(syntax, element.childNodes[0])
 		} catch (error) {
 			throw error;
+			return false;
 		}
 	}
 
@@ -238,14 +237,13 @@ export default class WijitCode extends HTMLElement {
 	}
 
 	/**
-	 * Normalizes indentation in code blocks by converting leading spaces to tabs.
+	 * Normalizes indentation in code blocks.
 	 *
-	 * @param {HTMLElement} container - The element containing the code to be formatted.
+	 * @param {String} string - A string of code
 	 * @returns {string} The formatted code with normalized indentation.
 	 * @remarks Ensures consistent spacing within the code block, regardless
-	 *          of how the code was originally indented. It also removes any common
-	 *          leading whitespace from all lines to create a visually cleaner block.
-	 *          - Reset the flag indicating a slot change needs an update.
+	 *          of how the code was originally indented.
+	 *          - Reset the flag indicating an update is needed.
 	 *          - Replace leading spaces with tabs, trim extra whitespace, and split the content into lines.
 	 *          - Determine the number of leading whitespaces in the last line.
 	 *          - Create a regular expression to match the leading whitespace.
@@ -274,10 +272,20 @@ export default class WijitCode extends HTMLElement {
 	 * @test self.getContent (self) // ""
 	 */
 	getContent (elem = this) {
-		if (elem.localName === 'textarea') return elem.value;
-		const ta = elem.querySelector ('textarea');
-		const content = (ta) ? ta.value : this.convertHTML(elem.innerHTML);
-		if (ta) ta.remove();
+		let ta, content;
+		if (elem.localName === 'textarea') {
+			// If elem is a textarea. This occurs when edit is enabled.
+			content = elem.value;
+		} else if (elem.firstElementChild && elem.firstElementChild.localName === 'textarea') {
+			// If user wrapped their code in a textarea (to prevent code execution)
+			// grab its contents and remove the textarea
+			ta = elem.querySelector ('textarea');
+			content = ta.value;
+			ta.remove();
+		} else {
+			content = this.convertHTML(elem.innerHTML);
+		}
+
 		return content;
 	}
 
@@ -296,6 +304,11 @@ export default class WijitCode extends HTMLElement {
 
 	/**
 	 * Enables editing.
+	 *
+	 * @test (self => {
+	 		self.enableEdit();
+	 		return self.shadowRoot.querySelector('textarea').classList.contains('hidden');
+	   })(self) // true
 	 */
 	enableEdit () {
 		const ta = this.shadowRoot.querySelector('textarea');
@@ -309,6 +322,11 @@ export default class WijitCode extends HTMLElement {
 
 	/**
 	 * Disables editing.
+	 *
+	 * @test (self => {
+	   		self.disableEdit();
+	   		return self.shadowRoot.querySelector('textarea').contains('hidden');
+	   })(self) // false
 	 */
 	disableEdit () {
 		const ta = this.shadowRoot.querySelector('textarea');
@@ -316,6 +334,10 @@ export default class WijitCode extends HTMLElement {
 		this.editorAbortController.abort();
 	}
 
+	/**
+	 * Adds event listener to intercept key presses when editing is enabled
+	 * @param  {HTMLElement} element The element on which to add the event listener.
+	 */
 	interceptKeyPress (element) {
 		element.addEventListener ('keydown', event => {
 			switch (event.key) {
@@ -332,28 +354,28 @@ export default class WijitCode extends HTMLElement {
 				ta.dispatchEvent(inputEvent);
 			    break;
 			}
-
 		}, { signal: this.#editorAbortController.signal });
 	}
 
 	/**
 	 * Gets the value of the inline property
 	 *
-	 * @returns {boolean} The value of the inline property.
+	 * @returns {boolean}
 	 *
 	 * @test typeof self.inline === 'boolean'  // true
 	 */
 	get inline () { return this.#inline; }
 
 	/**
-	 * Sets whether the code block should be displayed inline or as a block element.
+	 * Sets whether the code should be displayed inline or as a block.
 	 *
-	 * @param {boolean | string} value - The new value for the inline property.
-	 * @remarks Handle different input values for the inline property:
-	 *          - Empty string, 'true', or true: Set to true and apply inline styling.
-	 *          - Any other value: Set to false and remove inline styling.
+	 * @param {boolean | string} value 	The new value for the inline property.
 	 *
-	 * @test (self => {self.inline = 'false'; return self.inline})(self) // false
+	 * @test (self => {self.inline = false; return self.inline})(self) // false
+	 * @test (self => {
+	        self.setAttribute('inline', 'true')
+	        return self.inline;
+	 	})(self) // true
 	 */
 	set inline (value) {
 		const node = this.shadowRoot.querySelector('pre');
@@ -376,7 +398,8 @@ export default class WijitCode extends HTMLElement {
 	/**
 	 * Gets the value of the indent property
 	 *
-	 * @returns {string | number} The value of the indent property.
+	 * @returns {string | number}
+	 *
 	 * @test (typeof self.indent === 'string' || typeof self.indent === 'number') // true
 	 */
 	get indent () { return this.#indent; }
@@ -395,16 +418,19 @@ export default class WijitCode extends HTMLElement {
 	}
 
 	/**
-	 * Gets the value of the this#highlight property.
+	 * Gets the value of the highlight property.
 	 *
 	 * @returns {string}
 	 */
 	get highlight () { return this.#highlight; }
 
 	/**
-	 * Sets the value of this#highlight property
+	 * Sets the value of the highlight property and updates the content if needed.
 	 *
 	 * @param  {string} value Either a keyword, a url or a file path pointing to a syntax file.
+	 *
+	 * @test (self=>{ self.highlight = false; return self.highlight})(self) // false
+	 * @test (self=>{ self.setAttribute('highlight', 'true'); return self.highlight}) // true
 	 */
     set highlight (value) {
     	switch (value) {
@@ -418,18 +444,23 @@ export default class WijitCode extends HTMLElement {
     }
 
     /**
-     * Gets the this.#edit property
+     * Gets the edit property
      *
-     * @returns {string}
+     * @returns {Boolian}
+     *
+     * @test typeof self.edit // 'boolean'
      */
     get edit () { return this.#edit; }
 
     /**
-     * Sets the value of this.#edit and enables editing of content
+     * Sets the value of the edit property and enables editing of content
      *
-     * @param  {string} value Whether to enable editing.
-     *                        Empty string or "true" enables editing.
-     *                        Any other string disables editing.
+     * @param  {string | boolean} 	value 	Whether to enable editing.
+     *
+     * @test (self => {
+            self.setAttribute('edit', 'false');
+            return self.edit;
+            })(self) // false
      */
     set edit (value) {
     	switch (value) {
@@ -456,6 +487,8 @@ export default class WijitCode extends HTMLElement {
      * Gets the custom color palette, if there is one.
      *
      * @returns {Map | false} The custom highlighter palette
+     *
+     * @test self.palette === false || self.palette instanceof Map // true
      */
     get palette () {
     	if (this.highlighter) return this.highlighter.palette;
@@ -465,10 +498,14 @@ export default class WijitCode extends HTMLElement {
    	/**
    	 * Set custom color palette for code highlighting.
    	 *
-   	 * @param  {String|Array|Map} value The new palette definitions.
-   	 *                                  Array must be a two dimensional array where each entry is a key => value pair.
-   	 *                                  String must be JSON string representing a two dimensional Array.
-   	 * @return {void}
+   	 * @param  {String|Array|Map} 	value 	The new palette definitions.
+   	 *                                    	Array must be a two dimensional array where each entry is a key => value pair.
+   	 *                                     	String must be JSON string representing a two dimensional Array.
+   	 * @test (self=> {
+   	        self.setAttribute('palette', '[["property", "color"]]';
+   	        return self.palette instanceof Map;
+   	  })(self) // true
+   	 * @test  ( self => { const val = self.palette = false; return val; })(self) // false
    	 */
     set palette (value) {
     	if (this.highlighter) {
@@ -501,10 +538,10 @@ export class Highlighter {
 	]);
 
 	/**
-		* Creates a new instance of the class.
+		* Creates a new instance.
 		* @param {HTMLElement} element - The container element for the instance.
 		* @param {Palette} palette - The palette object to use.
-		* @returns {ClassName} - The new instance of the class.
+		* @returns {Highlighter} - The new instance.
 		*/
 	constructor (element, palette) {
 		this.container = element;
@@ -514,14 +551,20 @@ export class Highlighter {
 
 	/**
 	 * Highlights the specified text node using the provided syntax rules.
-	 * @param {string} syntax - The syntax to use for highlighting.
-	 * @param {Text} [textNode] - The text node to highlight. If not provided, uses the first child node of the container element.
-	 * @throws {Error} - If the browser does not support CSS Custom Highlight API.
+	 * @param 	{string} 	syntax 		The syntax to use for highlighting.
+	 * @param 	{Text} 		textNode 	The text node to highlight. If not provided, uses the first child node of the container element.
+	 * @throws 	{Error} 				If the browser does not support CSS Custom Highlight API,
+	 *          						or there is a problem retrieving the syntax definition.
+	 *
+	 * @test (self => {
+	 		return async function (self) {
+		 		return await self.highlight('html', new Text(''));
+	 		}()
+	   })(self) // true
 	 */
-	async highlight(syntax, textNode) {
+	async highlight(syntax = 'html', textNode) {
 		if (typeof window.Highlight === 'undefined') {
-			console.error('Browser does not support CSS Custom Highlight API');
-			return false;
+			throw new Error ('Browser does not support CSS Custom Highlight API');
 		}
 
 		textNode = textNode || this.container.childNodes[0] || document.createTextNode('');
@@ -543,9 +586,17 @@ export class Highlighter {
 	/**
 	 * Retrieves the syntax object for the specified syntax.
 	 * If a string is provided, it attempts to import the syntax module dynamically.
-	 * @param {string|Syntax} syntax - The syntax string or syntax object.
-	 * @returns {Promise<Syntax>} - A promise that resolves to the syntax object.
-	 * @throws {Error} - If there was an error loading the syntax module.
+	 *
+	 * @param 	{string|Syntax} 	- syntax - The syntax string or syntax object.
+	 * @returns {Promise<Syntax>} 	- A promise that resolves to the syntax object.
+	 * @throws 	{Error} 			- If there was an error loading the syntax module.
+	 *
+	 * @test (self => {
+	 *       return async function (self) {
+	 *       	const mod = await self.getSyntax();
+	 *       	return typeof mod;
+	 *       }
+	 * })(self) // 'object'
 	 */
 	async getSyntax (syntax = 'html') {
 		if (typeof syntax === 'string') {
@@ -555,8 +606,7 @@ export class Highlighter {
 			try {
 				syntax = await import (url);
 			} catch (error) {
-				console.error ("Error loading Highlight Syntax: ", error);
-				return error;
+				throw error;
 			}
 		}
 
@@ -565,10 +615,13 @@ export class Highlighter {
 
 	/**
 	 * Highlights the code within the specified text node using the provided syntax rules.
-	 * @param {Object} [syntax={}] - The syntax rules for highlighting.
-	 * @param {Text} textNode - The text node containing the code to be highlighted.
-	 * @returns {Set<Range>} - A set of Range objects representing the highlighted code ranges.
-	 * @throws {Error} - If the second argument is not a TEXT_NODE.
+	 *
+	 * @param 	{Object} 	 syntax={} 	The syntax rules for highlighting.
+	 * @param 	{Text} 		 textNode 	The text node containing the code to be highlighted.
+	 * @returns {Set<Range>} 			A set of Range objects representing the highlighted code ranges.
+	 * @throws 	{Error} 	 			If the second argument is not a TEXT_NODE.
+	 *
+	 * @test self.highlightCode({}, new Text('')) === true // true
 	 */
 	highlightCode (syntax = {}, textNode) {
         if (textNode.nodeType !== Node.TEXT_NODE) {
@@ -597,6 +650,7 @@ export class Highlighter {
                 ranges = this.setRanges (value, string, textNode);
             } else {
                 console.error (`Invalid syntax definition for ${prop}: `, `"${value}"`);
+                throw new Error (`Invalid syntax definition for ${prop}`);
             }
 
             this.setHighlight(ranges, prop);
@@ -607,10 +661,13 @@ export class Highlighter {
 
     /**
 	 * Sets ranges based on the provided regular expression and string within the specified node.
-	 * @param {RegExp} regex - The regular expression to match against the string.
-	 * @param {string} string - The string to search for matches.
-	 * @param {Node} node - The node within which the ranges will be set.
-	 * @returns {Set<Range>} - A set of Range objects representing the matched ranges.
+	 *
+	 * @param 	{RegExp} 	regex 	The regular expression to match against the string.
+	 * @param 	{string} 	string 	The string to search for matches.
+	 * @param 	{Node} 		node 	The node within which the ranges will be set.
+	 * @returns {Set<Range>} 		A set of Range objects representing the matched ranges.
+	 *
+	 * @test self.setRanges(/\w/, '', new Text('')) instanceof Set // true
 	 */
     setRanges (regex, string, node) {
         const ranges = new Set();
@@ -631,6 +688,8 @@ export class Highlighter {
     /**
 	 * Retrieves the CSS highlights associated with the current suffix.
 	 * @returns {Map<string, object>} - A map containing the CSS highlights entries.
+	 *
+	 * @test self.getHighlights() instanceof Map // true
 	 */
     getHighlights () {
     	const entries = new Map ();
@@ -644,9 +703,12 @@ export class Highlighter {
 
     /**
 	 * Sets highlights for the specified ranges using the provided type.
-	 * @param {Array<Range>} ranges - An array of Range objects representing the ranges to apply highlights to.
-	 * @param {string} [type='test'] - The type of highlights to apply. Defaults to 'test'.
-	 * @returns {Highlight} - The created Highlight object representing the applied highlights.
+	 *
+	 * @param 	{Array<Range>} 	ranges 		An array of Range objects representing the ranges to apply highlights to.
+	 * @param 	{String} 		type='test' The type of highlights to apply. Defaults to 'test'.
+	 * @returns {Boolean} 					True on success, False on failure
+	 *
+	 * @test self.setHighlight([new Range()]) // true
 	 */
     setHighlight (ranges, type = 'test') {
     	// Add this.suffix to isolate entries in the CSS Highlights Registry
@@ -657,14 +719,16 @@ export class Highlighter {
 	        CSS.highlights.set (type, highlighter);
         	return true;
         } catch (error) {
-        	console.error (error);
         	throw error;
+        	return false;
         }
     }
 
     /**
 	 * Creates and returns a style element containing the CSS styles for highlights.
 	 * @returns {HTMLStyleElement} - The created style element.
+	 *
+	 * @test self.getStyle() instanceof HTMLStyleElement // true
 	 */
     getStyle () {
     	const style = document.createElement('style');
@@ -681,15 +745,18 @@ export class Highlighter {
 
     /**
 	 * Removes the highlights associated with the specified type.
-	 * @param {string} type - The type of highlights to remove.
+	 *
+	 * @param {string} type 	The type of highlights to remove.
+	 *
 	 */
     remove(type) {
-    	CSS.highlights.delete(type + this.suffix);
+    	CSS.highlights.delete (type + this.suffix);
     }
 
     /**
 	 * Removes all highlights associated with the current suffix.
-	 * @returns {string} The suffix used to identify highlights on an instance
+	 *
+	 * @returns {string} 	The suffix used to identify highlights on an instance
 	 */
     removeAll () {
     	CSS.highlights.forEach ((highlight, name) => {
@@ -718,10 +785,40 @@ export class Highlighter {
     }
 
     /**
-	 * Gets the palette of colors for highlights.
-	 * @returns {Array<string>} - The palette of colors.
+	 * Gets the color palette for the current instance.
+	 *
+	 * @test self.palette instanceof Map // true
 	 */
     get palette () { return this.#palette || this.defaultColors;}
+
+    /**
+	 * Sets the palette for the current instance.
+	 *
+	 * @param {Array.<string>|Map.<string, string>|string} value - 	The palette data.
+	 *   - If an array is provided, it will be converted to a Map with key-value pairs.
+	 *   - If a Map is provided, it will be used directly.
+	 *   - If a string is provided, it will be parsed as JSON and converted to a Map (if valid).
+	 *   - If the value is null, undefined, or an empty string, the palette will be cleared.
+	 *
+	 * @throws {SyntaxError} If the provided string cannot be parsed as valid JSON.
+	 *
+	 * @test (self => { self.palette = null; return self.palette !== null})(self) // true
+	 * @test (self => { self.palette = [["property":"color"]]; return self.palette })(self) // self.palette instanceof Map
+	 * @test (self => {
+	        self.palette = new Map([["property", "color"]]);
+	        return self.palette instanceof Map;
+	  })(self) // true
+	  *
+	  * @test (self => {
+	         self.setAttribute('palette', '[["property", "color"]]');
+	         return self.palette instanceof Map;
+	   })(self) // true
+	  *
+	  * @test (self => {
+	  *       self.settAttribute('palette', '');
+	  *       return self.palette !== '';
+	  * })(self) // true
+	 */
     set palette (value) {
     	let map;
     	const style = document.head.querySelector(`#highlights${this.suffix}`);
