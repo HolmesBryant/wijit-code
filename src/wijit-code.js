@@ -210,19 +210,15 @@ export default class WijitCode extends HTMLElement {
 	 * @param 	{HTMLElement}	element - The element to highlight.
 	 * @throws 	{Error}					- Throws Error if highlighter.highlight() fails.
 	 *
-	 * @test  ( self => {
-	 		return async function () {
-	 			self.highlight = 'html';
-				return await self.highlightCode();
-	 		}();
-	   })(self) // true
-	 *
-	 * test self.highlightCode ( 'foo', self ) // false
+	 * @test self.highlightCode('html', self) // true
+	 * @test self.highlightCode('foo', self) // false
 	 */
 	async highlightCode (syntax = this.highlight, element = this) {
-		if (this.highlighter) {
-		    return await this.highlighter.highlight(syntax, element.childNodes[0])
-		} else {
+		this.highlighter = this.highlighter || new Highlighter(element);
+		try {
+	    	return await this.highlighter.highlight(syntax, element.childNodes[0])
+		} catch (error) {
+			throw error;
 			return false;
 		}
 	}
@@ -230,11 +226,14 @@ export default class WijitCode extends HTMLElement {
 	/**
 	 * Destroys all current highlights.
 	 * @returns {string} The suffix used to identify the highlights used by this instance in the CSS HighlightRegistry
-	 * @test self.destroyHighlights() // false;
+	 * @test self.destroyHighlights() // self.highlighter.suffix;
 	 */
 	destroyHighlights () {
-		if (!this.highlighter) return false;
-		return this.highlighter.removeAll();
+		try {
+			return this.highlighter.removeAll();
+		} catch (error) {
+			console.error (error);
+		}
 	}
 
 	/**
@@ -249,7 +248,7 @@ export default class WijitCode extends HTMLElement {
 	 *          - Determine the number of leading whitespaces in the last line.
 	 *          - Create a regular expression to match the leading whitespace.
 	 *          - Remove the leading whitespace from each line and return the formatted code as a string.
-	 * @test self.resetSpaces ( '\t\t\tfoo\t\t\t' ) // 'foo'
+	 * @test self.resetSpaces('\t\t\tfoo\t\t\t') // 'foo'
 	 */
 	resetSpaces (string) {
 		this.needsUpdate = false;
@@ -270,7 +269,7 @@ export default class WijitCode extends HTMLElement {
 	 * @param 	{HTMLElement} [elem] 	- The element from which to retrieve the content.
 	 * @returns {string} 				- The content of the element.
 	 *
-	 * @test self.getContent ( self ) // ""
+	 * @test self.getContent (self) // ""
 	 */
 	getContent (elem = this) {
 		let ta, content;
@@ -295,7 +294,7 @@ export default class WijitCode extends HTMLElement {
 	 *
 	 * @param 	{string} html 	Any string
 	 * @returns {string} 		The html converted into plain text that will not be rendered.
-	 * @test self.convertHTML ( '<script>alert("foo")</script>' ) // '\x3Cscript>alert("foo")\x3C/script>'
+	 * @test self.convertHTML('<script>alert("foo")</script>') // '\x3Cscript>alert("foo")\x3C/script>'
 	 */
 	convertHTML(html) {
 		const elem = document.createElement('textarea');
@@ -306,11 +305,10 @@ export default class WijitCode extends HTMLElement {
 	/**
 	 * Enables editing.
 	 *
-	 * @test ( self => {
-	 	self.enableEdit();
-	 	return self.shadowRoot.querySelector ( 'textarea' )
-	 	.classList.contains ( 'hidden' );
-	   }) ( self ) // false
+	 * @test (self => {
+	 		self.enableEdit();
+	 		return self.shadowRoot.querySelector('textarea').classList.contains('hidden');
+	   })(self) // true
 	 */
 	enableEdit () {
 		const ta = this.shadowRoot.querySelector('textarea');
@@ -326,14 +324,14 @@ export default class WijitCode extends HTMLElement {
 	 * Disables editing.
 	 *
 	 * @test (self => {
-	   	self.disableEdit();
-	   	return self.shadowRoot.querySelector('textarea').classList.contains('hidden');
-	   })(self) // true
+	   		self.disableEdit();
+	   		return self.shadowRoot.querySelector('textarea').contains('hidden');
+	   })(self) // false
 	 */
 	disableEdit () {
 		const ta = this.shadowRoot.querySelector('textarea');
 		ta.classList.add('hidden');
-		this.#editorAbortController.abort();
+		this.editorAbortController.abort();
 	}
 
 	/**
@@ -373,9 +371,9 @@ export default class WijitCode extends HTMLElement {
 	 *
 	 * @param {boolean | string} value 	The new value for the inline property.
 	 *
-	 * @test ( self => { self.inline = false; return self.inline })(self) // false
-	 * @test ( self => {
-	        self.setAttribute ( 'inline', 'true' );
+	 * @test (self => {self.inline = false; return self.inline})(self) // false
+	 * @test (self => {
+	        self.setAttribute('inline', 'true')
 	        return self.inline;
 	 	})(self) // true
 	 */
@@ -402,7 +400,7 @@ export default class WijitCode extends HTMLElement {
 	 *
 	 * @returns {string | number}
 	 *
-	 * @test typeof self.indent === 'string' || typeof self.indent === 'number' // true
+	 * @test (typeof self.indent === 'string' || typeof self.indent === 'number') // true
 	 */
 	get indent () { return this.#indent; }
 
@@ -411,8 +409,8 @@ export default class WijitCode extends HTMLElement {
 	 *
 	 * @param {string | number} value - The width of a tab character. Can take numbers or most css length measurements.
 	 *
-	 * @test ( self => { self.indent = '2rem'; return self.indent })(self) // '2rem'
-	 * @test ( self => { self.setAttribute('indent', '5'); return self.indent })(self) // '5'
+	 * @test (self => {self.indent = '2rem'; return self.indent})(self) // '2rem'
+	 * @test (self => {self.setAttribute('indent', '5'); return self.indent})(self) // '5'
 	 */
 	set indent (value) {
 		this.style.setProperty('--indent', value);
@@ -431,30 +429,19 @@ export default class WijitCode extends HTMLElement {
 	 *
 	 * @param  {string} value Either a keyword, a url or a file path pointing to a syntax file.
 	 *
-	 * @test (self => {
-			self.highlight = false;
-			return self.highlight;
-		})(self) // false
-	 *
-	 * @test (self => {
-			self.setAttribute('highlight', 'true');
-			return self.highlight
-		})(self) // true
+	 * @test (self=>{ self.highlight = false; return self.highlight})(self) // false
+	 * @test (self=>{ self.setAttribute('highlight', 'true'); return self.highlight}) // true
 	 */
-	set highlight (value) {
+    set highlight (value) {
     	switch (value) {
     	case 'false':
     	case false:
     		value = false;
     		break;
-    	default:
-    		value = true;
-    		this.highlighter = this.highlighter || new Highlighter(this);
-    		break;
     	}
     	this.#highlight = value;
     	if (this.contentNode) this.updateIfNeeded();
-	}
+    }
 
     /**
      * Gets the edit property
@@ -470,10 +457,10 @@ export default class WijitCode extends HTMLElement {
      *
      * @param  {string | boolean} 	value 	Whether to enable editing.
      *
-     * @test ( self => {
-            self.setAttribute ( 'edit', 'false' );
+     * @test (self => {
+            self.setAttribute('edit', 'false');
             return self.edit;
-       })(self) // false
+            })(self) // false
      */
     set edit (value) {
     	switch (value) {
@@ -501,6 +488,7 @@ export default class WijitCode extends HTMLElement {
      *
      * @returns {Map | false} The custom highlighter palette
      *
+     * @test self.palette === false || self.palette instanceof Map // true
      */
     get palette () {
     	if (this.highlighter) return this.highlighter.palette;
@@ -513,37 +501,17 @@ export default class WijitCode extends HTMLElement {
    	 * @param  {String|Array|Map} 	value 	The new palette definitions.
    	 *                                    	Array must be a two dimensional array where each entry is a key => value pair.
    	 *                                     	String must be JSON string representing a two dimensional Array.
-   	 *
-   	 * 	@test self.palette === false || self.palette instanceof Map // true
-     *  @test ( self => {
-     		self.highlight = 'html';
-       		self.palette = [["property","color"]];
-            return self.palette instanceof Map;
-      	})(self) // true
-     * @test (self => {
-     		self.highlight = 'html';
-			self.setAttribute ( 'palette', '[["property", "color"]]' );
-				return self.palette instanceof Map;
-		})(self) // true
-     *
-	 * @test (self => {
-	        self.setAttribute ( 'palette', '' );
-	        return self.palette !== '';
-	  })(self) // true
-	 *
-	 * @test (self=> {
-	 		self.highlight = 'html';
-			self.setAttribute ( 'palette', '[["property", "color"]]' );
-			return self.palette instanceof Map;
-		})(self) // true
-	 *
+   	 * @test (self=> {
+   	        self.setAttribute('palette', '[["property", "color"]]';
+   	        return self.palette instanceof Map;
+   	  })(self) // true
+   	 * @test  ( self => { const val = self.palette = false; return val; })(self) // false
    	 */
     set palette (value) {
     	if (this.highlighter) {
     		this.highlighter.palette = value;
     	} else {
     		console.error ('highlighter has not been initialized')
-    		// throw new Error ('highlighter has not been initialized')
     	}
     }
 }
@@ -588,10 +556,10 @@ export class Highlighter {
 	 * @throws 	{Error} 				If the browser does not support CSS Custom Highlight API,
 	 *          						or there is a problem retrieving the syntax definition.
 	 *
-	 * @test ( self => {
-	 	return async function (self) {
- 			return await self.highlight ( 'html', new Text('') );
-	 	}();
+	 * @test (self => {
+	 		return async function (self) {
+		 		return await self.highlight('html', new Text(''));
+	 		}()
 	   })(self) // true
 	 */
 	async highlight(syntax = 'html', textNode) {
@@ -611,7 +579,7 @@ export class Highlighter {
 			return true;
 		} catch (error) {
 			console.error('Error loading Highlight Syntax: ', error);
-			return false;
+			throw error;
 		}
 	}
 
@@ -620,10 +588,10 @@ export class Highlighter {
 	 * If a string is provided, it attempts to import the syntax module dynamically.
 	 *
 	 * @param 	{string|Syntax} 	- syntax - The syntax string or syntax object.
-	 * @returns 	{Promise<Syntax>} 	- A promise that resolves to the syntax object.
-	 * @throws 	{Error} 		- If there was an error loading the syntax module.
+	 * @returns {Promise<Syntax>} 	- A promise that resolves to the syntax object.
+	 * @throws 	{Error} 			- If there was an error loading the syntax module.
 	 *
-	 * @test ( self => {
+	 * @test (self => {
 	 *       return async function (self) {
 	 *       	const mod = await self.getSyntax();
 	 *       	return typeof mod;
@@ -653,7 +621,7 @@ export class Highlighter {
 	 * @returns {Set<Range>} 			A set of Range objects representing the highlighted code ranges.
 	 * @throws 	{Error} 	 			If the second argument is not a TEXT_NODE.
 	 *
-	 * @test self.highlightCode ( {}, new Text ('') ) === true // true
+	 * @test self.highlightCode({}, new Text('')) === true // true
 	 */
 	highlightCode (syntax = {}, textNode) {
         if (textNode.nodeType !== Node.TEXT_NODE) {
@@ -699,7 +667,7 @@ export class Highlighter {
 	 * @param 	{Node} 		node 	The node within which the ranges will be set.
 	 * @returns {Set<Range>} 		A set of Range objects representing the matched ranges.
 	 *
-	 * @test self.setRanges (/\w/, '', new Text ('') ) instanceof Set // true
+	 * @test self.setRanges(/\w/, '', new Text('')) instanceof Set // true
 	 */
     setRanges (regex, string, node) {
         const ranges = new Set();
@@ -740,7 +708,7 @@ export class Highlighter {
 	 * @param 	{String} 		type='test' The type of highlights to apply. Defaults to 'test'.
 	 * @returns {Boolean} 					True on success, False on failure
 	 *
-	 * @test self.setHighlight ( [new Range()] ) // true
+	 * @test self.setHighlight([new Range()]) // true
 	 */
     setHighlight (ranges, type = 'test') {
     	// Add this.suffix to isolate entries in the CSS Highlights Registry
@@ -778,7 +746,7 @@ export class Highlighter {
     /**
 	 * Removes the highlights associated with the specified type.
 	 *
-	 * @param {string} type - The type of highlights to remove.
+	 * @param {string} type 	The type of highlights to remove.
 	 *
 	 */
     remove(type) {
@@ -788,7 +756,7 @@ export class Highlighter {
     /**
 	 * Removes all highlights associated with the current suffix.
 	 *
-	 * @returns {string} - The suffix used to identify highlights on an instance
+	 * @returns {string} 	The suffix used to identify highlights on an instance
 	 */
     removeAll () {
     	CSS.highlights.forEach ((highlight, name) => {
@@ -834,6 +802,22 @@ export class Highlighter {
 	 *
 	 * @throws {SyntaxError} If the provided string cannot be parsed as valid JSON.
 	 *
+	 * @test (self => { self.palette = null; return self.palette !== null})(self) // true
+	 * @test (self => { self.palette = [["property":"color"]]; return self.palette })(self) // self.palette instanceof Map
+	 * @test (self => {
+	        self.palette = new Map([["property", "color"]]);
+	        return self.palette instanceof Map;
+	  })(self) // true
+	  *
+	  * @test (self => {
+	         self.setAttribute('palette', '[["property", "color"]]');
+	         return self.palette instanceof Map;
+	   })(self) // true
+	  *
+	  * @test (self => {
+	  *       self.settAttribute('palette', '');
+	  *       return self.palette !== '';
+	  * })(self) // true
 	 */
     set palette (value) {
     	let map;
