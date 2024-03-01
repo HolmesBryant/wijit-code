@@ -19,12 +19,11 @@ export default {
 		}
 		return ranges;
 	},
-	comment: /\#\!.*|\/\/.*|\/\*(?!\*\/)[\s\S]+?\*\//gm,
-	function: /(?<=\(|\b)\w+\s*\(|\(|\)/g,
-	number: /[+-]?\d+[\^\b\.\w]*/g,
 	operator: /\+|-|(?<!(\/|\/\*{1,}|\n\s*))\*(?!\/)|(?<![\/\*])\/(?![\/\*])|%|===|!==|>=|<=|>|<|!=|=|&&|\|\||(?<!#)!/g,
-	string: /["'`][^"'`]*["'`]/g,
-	tag: null,
+	number: /[+-]?\d+[\^\b\.\w]*/g,
+	string: /['"][^'"\n]*['"]/g,
+	function: /(?<=\(|\b)\w+\s*\(|\(|\)/g,
+	tag: /<[^>]+[>]/g,
 	keyword: [
 		// Interfaces
 		// https://html.spec.whatwg.org/dev/indices.html#all-interfaces'
@@ -343,4 +342,5 @@ export default {
 		'this',
 		'window',
 	],
+	comment: /\#\!.*|\/\/.*|\/\*(?!\*\/)[\s\S]+?\*\//gm,
 }

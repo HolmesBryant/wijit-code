@@ -68,6 +68,8 @@ export default class WijitCode extends HTMLElement {
 	 */
 	#indent = 4;
 
+	#lineNumbers = false;
+
 	/**
 	 * @private
 	 * @type Number (milliseconds)
@@ -87,7 +89,7 @@ export default class WijitCode extends HTMLElement {
 	 * @type string[]
 	 * @description A list of attributes to observe for changes.
 	 */
-	static observedAttributes = ['edit', 'highlight', 'inline', 'indent', 'palette'];
+	static observedAttributes = ['edit', 'highlight', 'inline', 'indent', 'line-numbers', 'palette'];
 
 	/**
 	 * @constructor
@@ -100,6 +102,7 @@ export default class WijitCode extends HTMLElement {
 			<style>
 				:host {
 					--indent: ${this.indent};
+					--line-number-color: gray;
 					display: inline-block;
 					overflow-x: auto;
 					vertical-align: middle;
@@ -111,9 +114,15 @@ export default class WijitCode extends HTMLElement {
 				}
 
 				pre {
-					font-family: "Courier New", monospace;
+					font-family: monospace;
 					margin: 0;
 					tab-size: var(--indent);
+				}
+
+				section {
+					display: grid;
+					gap: .5rem;
+					grid-template-columns: max-content 1fr;
 				}
 
 				textarea {
@@ -143,12 +152,21 @@ export default class WijitCode extends HTMLElement {
 					margin: 0;
 					white-space: nowrap;
 				}
+
+				#line-numbers {
+					color: var(--line-number-color);
+					font-family: monospace;
+					white-space: pre-line;
+				}
 			</style>
 
-			<div>
-				<pre><slot></slot></pre>
-				<textarea class="hidden" spellcheck="false"></textarea>
-			</div>
+			<section>
+				<div id="line-numbers"></div>
+				<div>
+					<pre><slot></slot></pre>
+					<textarea class="hidden" spellcheck="false"></textarea>
+				</div>
+			</section>
 		`;
 	}
 
@@ -161,6 +179,7 @@ export default class WijitCode extends HTMLElement {
 		this.contentNode = this.shadowRoot.querySelector ('pre');
 		this.textContent = this.resetSpaces(this.getContent());
 		if (this.highlight) this.highlightCode ();
+		if (this.lineNumbers) this.addLineNumbers();
 
 		slot.addEventListener('slotchange', () => {
 			this.updateIfNeeded();
@@ -171,6 +190,7 @@ export default class WijitCode extends HTMLElement {
 	 * Called when attributes change.
 	 */
 	attributeChangedCallback (attr, oldval, newval) {
+		attr = attr.replace(/-./g, (match) => match.toUpperCase()[1]);
 		this[attr] = newval;
 	}
 
@@ -197,6 +217,7 @@ export default class WijitCode extends HTMLElement {
 				this.textContent = this.resetSpaces(this.getContent(elem));
 				if (this.highlighter) this.destroyHighlights();
 				if (this.highlight) this.highlightCode();
+				if (this.lineNumbers) this.addLineNumbers();
 			}
 		} else {
 			this.#needsUpdate = true;
@@ -210,11 +231,10 @@ export default class WijitCode extends HTMLElement {
 	 * @param 	{HTMLElement}	element - The element to highlight.
 	 * @throws 	{Error}					- Throws Error if highlighter.highlight() fails.
 	 *
-	 * @test self.highlightCode('html', self) // true
-	 * @test self.highlightCode('foo', self) // false
+	 * @test self.highlight = 'html'; return self.highlightCode ( 'html', self ) // true
 	 */
 	async highlightCode (syntax = this.highlight, element = this) {
-		this.highlighter = this.highlighter || new Highlighter(element);
+		// this.highlighter = this.highlighter || new Highlighter(element);
 		try {
 	    	return await this.highlighter.highlight(syntax, element.childNodes[0])
 		} catch (error) {
@@ -226,7 +246,8 @@ export default class WijitCode extends HTMLElement {
 	/**
 	 * Destroys all current highlights.
 	 * @returns {string} The suffix used to identify the highlights used by this instance in the CSS HighlightRegistry
-	 * @test self.destroyHighlights() // self.highlighter.suffix;
+	 *
+	 * @test self.highlighter = 'html'; self.destroyHighlights() // self.highlighter
 	 */
 	destroyHighlights () {
 		try {
@@ -248,7 +269,7 @@ export default class WijitCode extends HTMLElement {
 	 *          - Determine the number of leading whitespaces in the last line.
 	 *          - Create a regular expression to match the leading whitespace.
 	 *          - Remove the leading whitespace from each line and return the formatted code as a string.
-	 * @test self.resetSpaces('\t\t\tfoo\t\t\t') // 'foo'
+	 * @test self.resetSpaces ( '\t\t\tfoo\t\t\t' ) // 'foo'
 	 */
 	resetSpaces (string) {
 		this.needsUpdate = false;
@@ -269,7 +290,7 @@ export default class WijitCode extends HTMLElement {
 	 * @param 	{HTMLElement} [elem] 	- The element from which to retrieve the content.
 	 * @returns {string} 				- The content of the element.
 	 *
-	 * @test self.getContent (self) // ""
+	 * @test self.getContent ( self ) // ""
 	 */
 	getContent (elem = this) {
 		let ta, content;
@@ -294,7 +315,7 @@ export default class WijitCode extends HTMLElement {
 	 *
 	 * @param 	{string} html 	Any string
 	 * @returns {string} 		The html converted into plain text that will not be rendered.
-	 * @test self.convertHTML('<script>alert("foo")</script>') // '\x3Cscript>alert("foo")\x3C/script>'
+	 * @test self.convertHTML ( '<script>alert("foo")</script>' ) // '\x3Cscript>alert("foo")\x3C/script>'
 	 */
 	convertHTML(html) {
 		const elem = document.createElement('textarea');
@@ -302,13 +323,22 @@ export default class WijitCode extends HTMLElement {
 		return elem.value;
 	}
 
+	addLineNumbers() {
+		let i = 1;
+		const container = this.shadowRoot.querySelector('#line-numbers');
+		container.textContent = '';
+		const lines = this.textContent.split (/\r?\n/).length;
+		for (i; i <= lines; i++) {
+			container.textContent += i + '\n';
+		}
+	}
+
 	/**
 	 * Enables editing.
 	 *
-	 * @test (self => {
-	 		self.enableEdit();
-	 		return self.shadowRoot.querySelector('textarea').classList.contains('hidden');
-	   })(self) // true
+	 * @test self.enableEdit();
+	 		 return self.shadowRoot.querySelector('textarea').classList.contains('hidden');
+	    	 // false
 	 */
 	enableEdit () {
 		const ta = this.shadowRoot.querySelector('textarea');
@@ -323,15 +353,14 @@ export default class WijitCode extends HTMLElement {
 	/**
 	 * Disables editing.
 	 *
-	 * @test (self => {
-	   		self.disableEdit();
-	   		return self.shadowRoot.querySelector('textarea').contains('hidden');
-	   })(self) // false
+	 * @test self.disableEdit();
+	   		 return self.shadowRoot.querySelector( 'textarea' ).classList.contains( 'hidden' );
+	   		 // true
 	 */
 	disableEdit () {
 		const ta = this.shadowRoot.querySelector('textarea');
 		ta.classList.add('hidden');
-		this.editorAbortController.abort();
+		this.#editorAbortController.abort();
 	}
 
 	/**
@@ -371,11 +400,10 @@ export default class WijitCode extends HTMLElement {
 	 *
 	 * @param {boolean | string} value 	The new value for the inline property.
 	 *
-	 * @test (self => {self.inline = false; return self.inline})(self) // false
-	 * @test (self => {
-	        self.setAttribute('inline', 'true')
-	        return self.inline;
-	 	})(self) // true
+	 * @test self.inline = false; return self.inline // false
+	 * @test self.setAttribute( 'inline', 'true' );
+	         return self.inline;
+	 		 // true
 	 */
 	set inline (value) {
 		const node = this.shadowRoot.querySelector('pre');
@@ -385,10 +413,14 @@ export default class WijitCode extends HTMLElement {
 			value = false;
 			this.removeAttribute('inline');
 			if (node) node.classList.remove('inline');
+			if (this.hasAttribute('line-numbers')) {
+				this.lineNumbers = this.getAttribute('line-numbers');
+			}
 			break;
 		default:
 			value = true;
 			if (node) node.classList.add('inline');
+			this.lineNumbers = false;
 			break;
 		}
 
@@ -400,7 +432,7 @@ export default class WijitCode extends HTMLElement {
 	 *
 	 * @returns {string | number}
 	 *
-	 * @test (typeof self.indent === 'string' || typeof self.indent === 'number') // true
+	 * @test ( typeof self.indent === 'string' || typeof self.indent === 'number' ) // true
 	 */
 	get indent () { return this.#indent; }
 
@@ -409,8 +441,8 @@ export default class WijitCode extends HTMLElement {
 	 *
 	 * @param {string | number} value - The width of a tab character. Can take numbers or most css length measurements.
 	 *
-	 * @test (self => {self.indent = '2rem'; return self.indent})(self) // '2rem'
-	 * @test (self => {self.setAttribute('indent', '5'); return self.indent})(self) // '5'
+	 * @test self.indent = '2rem'; return self.indent; // '2rem'
+	 * @test self.setAttribute( 'indent', '5' ); return self.indent; // '5'
 	 */
 	set indent (value) {
 		this.style.setProperty('--indent', value);
@@ -429,8 +461,10 @@ export default class WijitCode extends HTMLElement {
 	 *
 	 * @param  {string} value Either a keyword, a url or a file path pointing to a syntax file.
 	 *
-	 * @test (self=>{ self.highlight = false; return self.highlight})(self) // false
-	 * @test (self=>{ self.setAttribute('highlight', 'true'); return self.highlight}) // true
+	 * @test self.highlight = false; return self.highlight // false
+	 * @test self.highlight = 'html'; return self.highlight // 'html';
+	 * @test self.setAttribute( 'highlight', 'false' ); return self.highlight // false
+	 * @test self.setAttribute( 'highlight', 'html' ); return self.highlight // 'html'
 	 */
     set highlight (value) {
     	switch (value) {
@@ -438,6 +472,8 @@ export default class WijitCode extends HTMLElement {
     	case false:
     		value = false;
     		break;
+    	default:
+    		this.highlighter = this.highlighter || new Highlighter(this);
     	}
     	this.#highlight = value;
     	if (this.contentNode) this.updateIfNeeded();
@@ -457,10 +493,9 @@ export default class WijitCode extends HTMLElement {
      *
      * @param  {string | boolean} 	value 	Whether to enable editing.
      *
-     * @test (self => {
-            self.setAttribute('edit', 'false');
-            return self.edit;
-            })(self) // false
+     * @test self.setAttribute( 'edit', 'false' );
+             return self.edit;
+             // false
      */
     set edit (value) {
     	switch (value) {
@@ -484,6 +519,38 @@ export default class WijitCode extends HTMLElement {
     }
 
     /**
+     * Gets value of lineNumbers property
+     * @returns {boolean}
+     */
+    get lineNumbers () { return this.#lineNumbers; }
+
+    /**
+     * Sets the value of the lineNumbers property and either adds line numbers or removes them.
+     * @param  {string | boolean} value Accepts strings ("true", "false", "") or boolean
+     *
+     * @test self.lineNumbers = true; return self.lineNumbers; // true
+     * @test self.lineNumbers = false; return self.lineNumbers; // false
+     * @test self.lineNumbers = null; return self.lineNumbers; // true
+     * @test self.setAttribute ( 'line-numbers', 'true' ); return self.lineNumbers // true
+     * @test self.setAttribute ( 'line-numbers', '' ); return self.lineNumbers; // true
+     * @test self.setAttribute ( 'line-numbers', 'false' ); return self.lineNumbers; // false
+     */
+    set lineNumbers (value) {
+    	const container = this.shadowRoot.querySelector('#line-numbers');
+    	switch (value) {
+    	case 'false':
+    	case false:
+    		this.#lineNumbers = false;
+    		container.textContent = '';
+    		break;
+    	default:
+    		this.#lineNumbers = true;
+    		if (this.contentNode) this.updateIfNeeded();
+    		break;
+    	}
+    }
+
+    /**
      * Gets the custom color palette, if there is one.
      *
      * @returns {Map | false} The custom highlighter palette
@@ -501,11 +568,12 @@ export default class WijitCode extends HTMLElement {
    	 * @param  {String|Array|Map} 	value 	The new palette definitions.
    	 *                                    	Array must be a two dimensional array where each entry is a key => value pair.
    	 *                                     	String must be JSON string representing a two dimensional Array.
-   	 * @test (self=> {
-   	        self.setAttribute('palette', '[["property", "color"]]';
-   	        return self.palette instanceof Map;
-   	  })(self) // true
-   	 * @test  ( self => { const val = self.palette = false; return val; })(self) // false
+   	 *
+   	 * @test self.highlight = 'html';
+   	  		 self.setAttribute( 'palette', '[["property", "color"]]' );
+   	         return self.highlighter.palette instanceof Map // true
+   	 *
+   	 * @test const val = self.palette = false; return val; // false
    	 */
     set palette (value) {
     	if (this.highlighter) {
@@ -532,9 +600,9 @@ export class Highlighter {
 		['function', 'hsl(210, 50%, 60%)'],
 		['keyword', 'hsl(300, 30%, 68%)'],
 		['number', 'hsl(32, 93%, 66%)'],
-		['operator', 'hsl(13, 93%, 66%)'],
+		['operator', 'red'],
 		['string', 'hsl(114, 31%, 68%)'],
-		['tag', 'hsl(300, 30%, 68%)']
+		['tag', 'indianred']
 	]);
 
 	/**

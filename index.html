@@ -42,7 +42,6 @@
 
 	<details>
 	<summary>README</summary>
-
 		<div id="instructions"> </div>
 	</details>
 
@@ -70,7 +69,7 @@
 			<div>
 				<label for="demo-highlight">highlight</label>
 				<select id="demo-highlight" onchange="change(this, 'highlight')">
-					<option disabled selected></option>
+					<option selected value='reset'>Defaults</option>
 					<option>false</option>
 					<option>javascript</option>
 					<option>html</option>
@@ -86,6 +85,28 @@
 					</option>
 				</select>
 			</div>
+			<fieldset class="row">
+				<legend>line-numbers</legend>
+				<div>
+					<label for="demo-line-numbers-true">true</label>
+					<input
+					checked
+					type="radio"
+					value="true"
+					name="demo-line-numbers"
+					id="demo-line-numbers-true"
+					onchange="change(this, 'line-numbers')">
+				</div>
+				<div>
+					<label for="demo-line-numbers-false">false</label>
+					<input
+					type="radio"
+					value="false"
+					name="demo-line-numbers"
+					id="demo-line-numbers-false"
+					onchange="change(this, 'line-numbers')">
+				</div>
+			</fieldset>
 			<div>
 				<label for="demo-inline">inline</label>
 				<input type="checkbox" name="inline" id="demo-inline" onchange="change(this, 'inline')">
@@ -97,7 +118,10 @@
 		<wijit-tabs speed=".1">
 			<button slot="controls" class="active-tab">Javascript</button>
 			<article>
-				<wijit-code class="demo" highlight="javascript">
+				<wijit-code
+				class="demo"
+				line-numbers
+				highlight="javascript">
 					#! hashbang
 
 					/**
@@ -146,7 +170,10 @@
 
 			<button slot="controls">HTML</button>
 			<article>
-				<wijit-code class="demo" highlight="html">
+				<wijit-code
+				class="demo"
+				line-numbers
+				highlight="html">
 					<textarea>
 						<!-- Comment -->
 						<!--A
@@ -196,7 +223,7 @@
 		<header><h2>Inline Code</h2></header>
 		<div class="row">
 			<wijit-code inline>
-				<wijit-code inline="true" >...</wijit-code >
+				<wijit-code inline>...</wijit-code >
 			</wijit-code>
 
 			<p>Some text <wijit-code inline> function foo() {}</wijit-code> some more text.</p>
@@ -229,6 +256,18 @@
 		</div>
 
 		<div>
+			<header><h3>Add line numbers</h3></header>
+			<wijit-code line-numbers>
+				<wijit-code line-numbers>
+					<article>
+						<h1>A Title</h1>
+						<p>Some text</p>
+					</article>
+				</wijit-code>
+			</wijit-code>
+		</div>
+
+		<div>
 			<header><h3>Highlight Code using Keyword</h3></header>
 			<wijit-code id="editable" highlight="html" edit>
 				<textarea>
@@ -250,6 +289,23 @@
 						<h1>A Title</h1>
 						<p class="foo">Some text</p>
 					</article>
+				</wijit-code>
+			</wijit-code>
+		</div>
+
+		<div>
+			<header style="text-align:center">
+				<h3 style="margin-bottom:0">Prevent code execution</h3>
+				<span>(wrap code in textarea)</span>
+			</header>
+			<wijit-code>
+				<textarea>
+					<wijit-code>
+						&lt;textarea>
+							<img src="false" onerror="alert('fubar!')">
+						&lt;/textarea>
+					</wijit-code>
+				</textarea>
 			</wijit-code>
 		</div>
 	</section>

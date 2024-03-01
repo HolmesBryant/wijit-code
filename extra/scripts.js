@@ -11,7 +11,7 @@ function change(elem, attr) {
 		value = (elem.checked) ? 'true' : 'false';
 		break;
 	case "highlight":
-		// console.log(elem, attr);
+		if (elem.value === 'reset') location.reload();
 		break;
 	}
 
