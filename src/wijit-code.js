@@ -602,6 +602,7 @@ export class Highlighter {
 		['number', 'hsl(32, 93%, 66%)'],
 		['operator', 'red'],
 		['string', 'hsl(114, 31%, 68%)'],
+		['variable', 'whitesmoke'],
 		['tag', 'indianred']
 	]);
 

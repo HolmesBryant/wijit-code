@@ -21,9 +21,10 @@ export default {
 	},
 	operator: /\+|-|(?<!(\/|\/\*{1,}|\n\s*))\*(?!\/)|(?<![\/\*])\/(?![\/\*])|%|===|!==|>=|<=|>|<|!=|=|&&|\|\||(?<!#)!/g,
 	number: /[+-]?\d+[\^\b\.\w]*/g,
-	string: /['"][^'"\n]*['"]/g,
+	string: /['"][^'"\n]*['"]|`[^`]*`/g,
+	variable: /\$\s*{[^}]+}/g,
 	function: /(?<=\(|\b)\w+\s*\(|\(|\)/g,
-	tag: /<[^>]+[>]/g,
+	tag: /<\/?[\w-]+|(?<=[\w"])>/g,
 	keyword: [
 		// Interfaces
 		// https://html.spec.whatwg.org/dev/indices.html#all-interfaces'

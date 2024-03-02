@@ -127,47 +127,54 @@ This will prevent the browser from interpreting your code.
 ## Custom Color Palettes ##
 
 If you have enabled syntax highlighting, you may define custom color palettes via the "palette" attribute or by directly setting the palette property.
-You may define your palette as a two dimensional array of key => value pairs or as a javascript Map.
-(If you define the palette as an Array, the component will convert it into a Map.)
+You may define your palette as a two dimensional array of key => value pairs, a javascript Map or a JSON string representing a two dimensional map (regardless, the component will convert it into a Map).
 Each key should correspond to a property in the syntax definition file you are using.
 Each value should be a valid css color value.
 
-The default keys are "argument", "comment", "function", "keyword", "number", "operator", "string" and "tag".
-Unless your syntax definition file adds new key words, you can just use the default keys.
+The default keys are "argument", "comment", "function", "keyword", "number", "operator", "string", "tag" and "variabe".
 
+Unless your syntax definition file adds new key words, you can just use the default keys. You do not have to include every key, the the properties/values are merged into the default scheme, so any keys you omit will take the default color.
+
+	// Array
 	customElements.whenDefined('wijit-code')
 	.then (() => {
 		const instance = document.querySelector('wijit-code#instance');
 		const colors = [
-			["argument", "orange"],
-			["comment", "gray"],
-			["function", "dodgerblue"],
-			["keyword", "purple"],
-			["number", "darksalmon"],
-			["operator", "darkred"],
-			["string", "darkgreen"],
-			["tag", "olive"]
+			[ "argument", "hsl(32, 93%, 66%)" ],
+			[ "comment", "hsl(221, 12%, 69%)" ],
+			[ "function", "hsl(210, 50%, 60%)" ],
+			[ "keyword", "hsl(300, 30%, 68%)" ],
+			[ "number", "hsl(32, 93%, 66%)" ],
+			[ "operator", "red" ],
+			[ "string", "hsl(114, 31%, 68%)" ],
+			[ "variable", "whitesmoke" ],
+			[ "tag", "indianred" ]
 		];
 		// assign Array to palette
 		instance.palette = colors;
 	});
 
 
-	customElements.whenDefined('wijit-code')
+	// Map
+	customElements.whenDefined( 'wijit-code' )
 	.then (() => {
-		const instance = document.querySelector('wijit-code#instance');
+		const instance = document.querySelector( 'wijit-code#instance' );
 		const colors = new Map();
-		colors.set("argument", "orange");
-		colors.set("comment", "gray");
-		colors.set("function", "dodgerblue");
-		colors.set("keyword", "purple");
-		colors.set("number", "darksalmon");
-		colors.set("operator", "darkred");
-		colors.set("string", "darkgreen");
-		colors.set("tag", "olive");
+		colors.set( "argument", "orange" );
+		colors.set( "comment", "gray" );
+		colors.set( "function", "dodgerblue" );
+		colors.set( "keyword", "purple" );
+		colors.set( "number", "darksalmon" );
+		colors.set( "operator", "darkred" );
+		colors.set( "string", "darkgreen" );
+		colors.set( "tag", "olive" );
+		colors.set( "variable", "whitesmoke" )
 		// assign Map to palette
 		instance.palette = colors;
 	});
+
+	// JSON string
+	<wijit-code palette="[["key", "color"]]">...</wijit-code>
 
 ## Custom Syntax Definitions ##
 
@@ -177,12 +184,10 @@ The value of the "highlight" attribute on the <wijit-code> tag corresponds to a 
 If "highlight" has a value of "html", the component looks for a file named "syntax.html.js" in the same directory as the component script.
 
 You may use your own syntax definitions by creating a syntax definition file.
-The default naming scheme for this file is "syntax.[language_name].js",
-so if you want to create a syntax file for Python, the file name would be "syntax.python.js".
-The default location for this type of file is the same directory as the wijit-code.js file.
-Though it is not mandatory to place your file there, you will have to give the "highlight" attribute a path or url instead of a simple key word if you place your syntax file somewhere else.
+The default naming scheme for this file is "syntax.[language_name].js", so if you want to create a syntax file for Python, the file name would be "syntax.python.js".
+Even though the default location for this type of file is in the same directory as the wijit-code.js file, it is not mandatory to place your file there. You may place a definition file anywhere that can be imported by javascript, but if you do this, you must give the "highlight" attribute a path or url instead of a simple key word.
 
-A syntax definition file consists of a single exported object containing several properties.
+A syntax definition file consists of a single exported object containing several properties. You must define this object as the default export.
 
 	// syntax.example.js
 	export default {
@@ -193,12 +198,13 @@ A syntax definition file consists of a single exported object containing several
 		number: ... ,
 		operator: ...,
 		string: ...,
-		tag: ...
+		tag: ...,
+		variable: ...
 	};
 
 Each property corresponds to a CSS Custom Highlight API css rule which is injected in a style tag into the head of the document.
-The default properties are "argument", "comment", "function", "keyword", "number", "operator", "string" and "tag".
-If you add a new property name, you will need to add a new color palette entry which includes the new property name and a color.
+The default properties are the same as those desctribed in **Custom Color Palettes**.
+If you add a new property name, you must add a new color palette entry which includes the new property name and a color.
 
 	//syntax.example.js
 	export default {
@@ -207,10 +213,10 @@ If you add a new property name, you will need to add a new color palette entry w
 	}
 
 	//scripts.js
-	customElements.whenDefined('wijit-code')
+	customElements.whenDefined( 'wijit-code' )
 	.then (() => {
-		const instance = document.querySelector('wijit-code#instance');
-		instance.palette.set("newProperty", "LemonChiffon");
+		const instance = document.querySelector( 'wijit-code#instance' );
+		instance.palette.set( "newProperty", "LemonChiffon" );
 	});
 
 The value for each property can be an Array, Function, RexExp or null.
@@ -223,7 +229,7 @@ Arrays are useful for defining things like keywords.
 	}
 
 RegExp expressions are useful for simple matches that do not require extra processing or capture groups.
-The RexExp must include the "g" flag.
+The RexExp **must** include the "g" flag.
 Do not put quotes around the expression.
 
 	export default {
@@ -237,20 +243,18 @@ Each function takes two arguments (string, node) and must return a flat array of
 "node" is the node containing the textContent of everything inside the component's start/end tags.
 Use "node" when invoking range.setStart(node, index) and range.setEnd(node, index).
 
-"string" is the actual content.
-It includes spaces, tabs, line breaks etc.
+"string" is the actual content. It includes spaces, tabs, line breaks etc.
 
 	export default {
-		tag: function (string, node) {
+		tag: function ( string, node ) {
 			let match, range;
 			const ranges = [];
 			const regex = /<\/?[^>]+>/g;
-			// loop through matches
-		    while (match = regex.exec(string)) {
+		    while( match = regex.exec( string ) ) {
 				range = new Range();
-				range.setStart(node, match.index);
-				range.setEnd(node, match.index + match[0].length);
-				ranges.push(range);
+				range.setStart( node, match.index );
+				range.setEnd( node, match.index + match[0].length );
+				ranges.push( range );
 		    }
 		    // return flat array of Range objects
 			return ranges;
@@ -258,10 +262,20 @@ It includes spaces, tabs, line breaks etc.
 		...
 	}
 
-Null is used when you want to include a property, but don't really have a use for it.
+Null is used when you want to include a property, but don't really have a use for it at the moment.
 
 	export default {
 		keywords: null,
+		...
+	}
+
+**It is important to note that the effect of each following item supercedes the effect of the previous one (depending, of course, on how the definitions are written).**
+In the following example, the "tag" definition will match everyting between and including angle brackets (including strings), but since the "string" definition follows it, any strings within the angle brackets will be colored according the the string color, not the tag color.
+
+	// example
+	export default {
+		tag: /<[^>]+>/g,
+		string: /['"].*['"]/g
 		...
 	}
 
