@@ -97,7 +97,7 @@ export default class WijitCode extends HTMLElement {
 	 */
 	constructor() {
 		super();
-		this.attachShadow({mode:'open'});
+		this.attachShadow( {mode:'open'} );
 		this.shadowRoot.innerHTML = `
 			<style>
 				:host {
@@ -117,6 +117,7 @@ export default class WijitCode extends HTMLElement {
 					font-family: monospace;
 					margin: 0;
 					tab-size: var(--indent);
+					white-space: pre-wrap;
 				}
 
 				section {
@@ -209,7 +210,7 @@ export default class WijitCode extends HTMLElement {
 	 * @remarks Sets a flag to indicate an update is needed on the next call to this method.
 	 *          This helps prevent redundant updates during rapid changes.
 	 */
-	updateIfNeeded(delay = 500, elem = this) {
+	updateIfNeeded (delay = 500, elem = this) {
 		const currentTime = Date.now();
 		if (this.#needsUpdate) {
 			if (currentTime - this.#lastMutationTime > delay) {

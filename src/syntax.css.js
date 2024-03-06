@@ -1,4 +1,11 @@
-/* Work in Progress! */
+/**
+ * CSS syntax definition file for wijit-code web component
+ * Work in Progress!
+ *
+ *  @author Holmes Bryant <https://github.com/HolmesBryant>
+ *  @license GPL-3.0
+ *
+ */
 export default {
 	argument: null,
 	attribute: null,
