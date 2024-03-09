@@ -19,6 +19,7 @@ As of this writing (2024-02-04), Firefox requires you to set a custom flag in or
 - Removes any common leading whitespace from all lines to create a visually cleaner block.
 - Customize the amount of indentation within a code block.
 - Display the code inline or as a block.
+- Optional line numbers
 - Can highlight HTML or Javascript code out of the box.
 - The highlighter does not inject any spans (or other elements) into your code.
 - Uses the CSS Custom Highlight API.
@@ -43,22 +44,22 @@ As of this writing (2024-02-04), Firefox requires you to set a custom flag in or
 	  Ideally, this file should be located in the same directory as wijit-code.js.
 	  The value "false" will negate the effect, as if the attribute were not present at all.
 
-	- **Keywords:** You can provide a simple keyword, such as "html" or "javascript".
-   		- The component will look for a file named "syntax.[keyword].js" in the **same folder** as wigit-code.js, and try to import it.
-		- Make sure you have the appropriate syntax file in this folder.
+	  - **Keywords:** You can provide a simple keyword, such as "html" or "javascript".
+   	    - The component will look for a file named "syntax.[keyword].js" in the **same folder** as wigit-code.js, and try to import it.
+		    - Make sure you have the appropriate syntax file in this folder.
 
-	- **URLs:** Alternatively, you can provide a network url or a file path.
-		- If you are importing over a network, you should include the appropriate protocol such as "http://" or "https://".
-		If the file you are importing is located on a different domain, make sure the server hosting the file allows cross-origin resource sharing (CORS).
-		Example: "https://mydomain/path/to/file.js"
-		- If you are importing a file path, the path should begin with "/", "./", or "../" AND must be be somewhere inside the Document Root.
-		Example: "../parentFolder/otherFolder/syntax.html.js"
+	  - **URLs:** Alternatively, you can provide a network url or a file path.
+		    - If you are importing over a network, you should include the appropriate protocol such as "http://" or "https://".
+		    - If the file you are importing is located on a different domain, make sure the server hosting the file allows cross-origin resource sharing (CORS).
+		    - Example: "https://mydomain/path/to/file.js"
+		    - If you are importing a file path, the path should begin with "/", "./", or "../" AND must be be somewhere inside the Document Root.
+		    - Example: "../parentFolder/otherFolder/syntax.html.js"
 
-- **palette** (default: null) | Acceptable values [JSON parsable string]
-	- You may define your own color palette on a per-instance basis.
-	The value of this attribute must be a valid JSON string representing a two-dimensional array of key => value pairs.
-	The keys correspond to the properties defined in the syntax file.
-	The values can be any valid css color value.
+- **line-numbers** (default: false) | Acceptable values [truthy values, 'false']
+    - Add this attribute to display a line number in front of each line of code. A truthy value is any string except "false".
+
+- **palette** (default: null) | Acceptable values [JSON parsable string reresenting two dimensional array]
+	- You may define your own color palette on a per-instance basis. The value of this attribute must be a valid JSON string representing a two-dimensional array of key => value pairs. The keys correspond to the properties defined in the syntax file. The values can be any valid css color value.
 	Example: [["tag", "red"], ["function", "blue"]]
 	- You may also define a custom palette using javascript.
 	The process is described below.

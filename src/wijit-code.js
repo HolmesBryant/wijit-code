@@ -467,122 +467,122 @@ export default class WijitCode extends HTMLElement {
 	 * @test self.setAttribute( 'highlight', 'false' ); return self.highlight // false
 	 * @test self.setAttribute( 'highlight', 'html' ); return self.highlight // 'html'
 	 */
-    set highlight (value) {
-    	switch (value) {
-    	case 'false':
-    	case false:
-    		value = false;
-    		break;
-    	default:
-    		this.highlighter = this.highlighter || new Highlighter(this);
-    	}
-    	this.#highlight = value;
-    	if (this.contentNode) this.updateIfNeeded();
-    }
+  set highlight (value) {
+  	switch (value) {
+  	case 'false':
+  	case false:
+  		value = false;
+  		break;
+  	default:
+  		this.highlighter = this.highlighter || new Highlighter(this);
+  	}
+  	this.#highlight = value;
+  	if (this.contentNode) this.updateIfNeeded();
+  }
 
-    /**
-     * Gets the edit property
-     *
-     * @returns {Boolian}
-     *
-     * @test typeof self.edit // 'boolean'
-     */
-    get edit () { return this.#edit; }
+  /**
+   * Gets the edit property
+   *
+   * @returns {Boolian}
+   *
+   * @test typeof self.edit // 'boolean'
+   */
+  get edit () { return this.#edit; }
 
-    /**
-     * Sets the value of the edit property and enables editing of content
-     *
-     * @param  {string | boolean} 	value 	Whether to enable editing.
-     *
-     * @test self.setAttribute( 'edit', 'false' );
-             return self.edit;
-             // false
-     */
-    set edit (value) {
-    	switch (value) {
-    	case 'false':
-    	case false:
-    		this.#edit = false;
-    		if (this.contentNode) this.disableEdit();
-    		break;
-    	default:
-    		this.#edit = true;
-    		if (this.contentNode) {
-	    		this.enableEdit();
-    		} else {
-    			customElements.whenDefined (this.localName)
-    			.then (cls => {
-    				this.enableEdit();
-    			})
-    		}
-    		break;
-    	}
-    }
+  /**
+   * Sets the value of the edit property and enables editing of content
+   *
+   * @param  {string | boolean} 	value 	Whether to enable editing.
+   *
+   * @test self.setAttribute( 'edit', 'false' );
+           return self.edit;
+           // false
+   */
+  set edit (value) {
+  	switch (value) {
+  	case 'false':
+  	case false:
+  		this.#edit = false;
+  		if (this.contentNode) this.disableEdit();
+  		break;
+  	default:
+  		this.#edit = true;
+  		if (this.contentNode) {
+    		this.enableEdit();
+  		} else {
+  			customElements.whenDefined (this.localName)
+  			.then (cls => {
+  				this.enableEdit();
+  			})
+  		}
+  		break;
+  	}
+  }
 
-    /**
-     * Gets value of lineNumbers property
-     * @returns {boolean}
-     */
-    get lineNumbers () { return this.#lineNumbers; }
+  /**
+   * Gets value of lineNumbers property
+   * @returns {boolean}
+   */
+  get lineNumbers () { return this.#lineNumbers; }
 
-    /**
-     * Sets the value of the lineNumbers property and either adds line numbers or removes them.
-     * @param  {string | boolean} value Accepts strings ("true", "false", "") or boolean
-     *
-     * @test self.lineNumbers = true; return self.lineNumbers; // true
-     * @test self.lineNumbers = false; return self.lineNumbers; // false
-     * @test self.lineNumbers = null; return self.lineNumbers; // true
-     * @test self.setAttribute ( 'line-numbers', 'true' ); return self.lineNumbers // true
-     * @test self.setAttribute ( 'line-numbers', '' ); return self.lineNumbers; // true
-     * @test self.setAttribute ( 'line-numbers', 'false' ); return self.lineNumbers; // false
-     */
-    set lineNumbers (value) {
-    	const container = this.shadowRoot.querySelector('#line-numbers');
-    	switch (value) {
-    	case 'false':
-    	case false:
-    		this.#lineNumbers = false;
-    		container.textContent = '';
-    		break;
-    	default:
-    		this.#lineNumbers = true;
-    		if (this.contentNode) this.updateIfNeeded();
-    		break;
-    	}
-    }
+  /**
+   * Sets the value of the lineNumbers property and either adds line numbers or removes them.
+   * @param  {string | boolean} value Accepts strings ("true", "false", "") or boolean
+   *
+   * @test self.lineNumbers = true; return self.lineNumbers; // true
+   * @test self.lineNumbers = false; return self.lineNumbers; // false
+   * @test self.lineNumbers = null; return self.lineNumbers; // true
+   * @test self.setAttribute ( 'line-numbers', 'true' ); return self.lineNumbers // true
+   * @test self.setAttribute ( 'line-numbers', '' ); return self.lineNumbers; // true
+   * @test self.setAttribute ( 'line-numbers', 'false' ); return self.lineNumbers; // false
+   */
+  set lineNumbers (value) {
+  	const container = this.shadowRoot.querySelector('#line-numbers');
+  	switch (value) {
+  	case 'false':
+  	case false:
+  		this.#lineNumbers = false;
+  		container.textContent = '';
+  		break;
+  	default:
+  		this.#lineNumbers = true;
+  		if (this.contentNode) this.updateIfNeeded();
+  		break;
+  	}
+  }
 
-    /**
-     * Gets the custom color palette, if there is one.
-     *
-     * @returns {Map | false} The custom highlighter palette
-     *
-     * @test self.palette === false || self.palette instanceof Map // true
-     */
-    get palette () {
-    	if (this.highlighter) return this.highlighter.palette;
-    	return false;
-    }
+  /**
+   * Gets the custom color palette, if there is one.
+   *
+   * @returns {Map | false} The custom highlighter palette
+   *
+   * @test self.palette === false || self.palette instanceof Map // true
+   */
+  get palette () {
+  	if (this.highlighter) return this.highlighter.palette;
+  	return false;
+  }
 
-   	/**
-   	 * Set custom color palette for code highlighting.
-   	 *
-   	 * @param  {String|Array|Map} 	value 	The new palette definitions.
-   	 *                                    	Array must be a two dimensional array where each entry is a key => value pair.
-   	 *                                     	String must be JSON string representing a two dimensional Array.
-   	 *
-   	 * @test self.highlight = 'html';
-   	  		 self.setAttribute( 'palette', '[["property", "color"]]' );
-   	         return self.highlighter.palette instanceof Map // true
-   	 *
-   	 * @test const val = self.palette = false; return val; // false
-   	 */
-    set palette (value) {
-    	if (this.highlighter) {
-    		this.highlighter.palette = value;
-    	} else {
-    		console.error ('highlighter has not been initialized')
-    	}
-    }
+ 	/**
+ 	 * Set custom color palette for code highlighting.
+ 	 *
+ 	 * @param  {String|Array|Map} 	value 	The new palette definitions.
+ 	 *                                    	Array must be a two dimensional array where each entry is a key => value pair.
+ 	 *                                     	String must be JSON string representing a two dimensional Array.
+ 	 *
+ 	 * @test self.highlight = 'html';
+ 	  		 self.setAttribute( 'palette', '[["property", "color"]]' );
+ 	         return self.highlighter.palette instanceof Map // true
+ 	 *
+ 	 * @test const val = self.palette = false; return val; // false
+ 	 */
+  set palette (value) {
+  	if (this.highlighter) {
+  		this.highlighter.palette = value;
+  	} else {
+  		console.error ('highlighter has not been initialized')
+  	}
+  }
 }
 
 /**
@@ -727,195 +727,195 @@ export class Highlighter {
         }
 
         return true;
-    }
+  }
 
-    /**
-	 * Sets ranges based on the provided regular expression and string within the specified node.
-	 *
-	 * @param 	{RegExp} 	regex 	The regular expression to match against the string.
-	 * @param 	{string} 	string 	The string to search for matches.
-	 * @param 	{Node} 		node 	The node within which the ranges will be set.
-	 * @returns {Set<Range>} 		A set of Range objects representing the matched ranges.
-	 *
-	 * @test self.setRanges(/\w/, '', new Text('')) instanceof Set // true
-	 */
-    setRanges (regex, string, node) {
-        const ranges = new Set();
-        const matches = string.matchAll(regex);
+  /**
+ * Sets ranges based on the provided regular expression and string within the specified node.
+ *
+ * @param 	{RegExp} 	regex 	The regular expression to match against the string.
+ * @param 	{string} 	string 	The string to search for matches.
+ * @param 	{Node} 		node 	The node within which the ranges will be set.
+ * @returns {Set<Range>} 		A set of Range objects representing the matched ranges.
+ *
+ * @test self.setRanges(/\w/, '', new Text('')) instanceof Set // true
+ */
+  setRanges (regex, string, node) {
+      const ranges = new Set();
+      const matches = string.matchAll(regex);
 
-        for (const match of matches) {
-            const start = match.index;
-            const end = start + match[0].length;
-            const range = new Range();
-            range.setStart (node, start);
-            range.setEnd (node, end);
-            ranges.add (range);
-        }
+      for (const match of matches) {
+          const start = match.index;
+          const end = start + match[0].length;
+          const range = new Range();
+          range.setStart (node, start);
+          range.setEnd (node, end);
+          ranges.add (range);
+      }
 
-        return ranges;
-    }
+      return ranges;
+  }
 
-    /**
-	 * Retrieves the CSS highlights associated with the current suffix.
-	 * @returns {Map<string, object>} - A map containing the CSS highlights entries.
-	 *
-	 * @test self.getHighlights() instanceof Map // true
-	 */
-    getHighlights () {
-    	const entries = new Map ();
-    	CSS.highlights.forEach ((highlight, name) => {
-    		if (name.endsWith(this.suffix)) {
-    			entries.set (name, highlight);
-    		}
-    	})
-    	return entries;
-    }
+  /**
+ * Retrieves the CSS highlights associated with the current suffix.
+ * @returns {Map<string, object>} - A map containing the CSS highlights entries.
+ *
+ * @test self.getHighlights() instanceof Map // true
+ */
+  getHighlights () {
+  	const entries = new Map ();
+  	CSS.highlights.forEach ((highlight, name) => {
+  		if (name.endsWith(this.suffix)) {
+  			entries.set (name, highlight);
+  		}
+  	})
+  	return entries;
+  }
 
-    /**
-	 * Sets highlights for the specified ranges using the provided type.
-	 *
-	 * @param 	{Array<Range>} 	ranges 		An array of Range objects representing the ranges to apply highlights to.
-	 * @param 	{String} 		type='test' The type of highlights to apply. Defaults to 'test'.
-	 * @returns {Boolean} 					True on success, False on failure
-	 *
-	 * @test self.setHighlight([new Range()]) // true
-	 */
-    setHighlight (ranges, type = 'test') {
-    	// Add this.suffix to isolate entries in the CSS Highlights Registry
-    	// Otherwise, highlights between instances interfere with each other
-    	type = type + this.suffix;
-        const highlighter = new Highlight(...ranges);
-        try {
-	        CSS.highlights.set (type, highlighter);
-        	return true;
-        } catch (error) {
-        	throw error;
-        	return false;
-        }
-    }
+  /**
+ * Sets highlights for the specified ranges using the provided type.
+ *
+ * @param 	{Array<Range>} 	ranges 		An array of Range objects representing the ranges to apply highlights to.
+ * @param 	{String} 		type='test' The type of highlights to apply. Defaults to 'test'.
+ * @returns {Boolean} 					True on success, False on failure
+ *
+ * @test self.setHighlight([new Range()]) // true
+ */
+  setHighlight (ranges, type = 'test') {
+  	// Add this.suffix to isolate entries in the CSS Highlights Registry
+  	// Otherwise, highlights between instances interfere with each other
+  	type = type + this.suffix;
+      const highlighter = new Highlight(...ranges);
+      try {
+        CSS.highlights.set (type, highlighter);
+      	return true;
+      } catch (error) {
+      	throw error;
+      	return false;
+      }
+  }
 
-    /**
-	 * Creates and returns a style element containing the CSS styles for highlights.
-	 * @returns {HTMLStyleElement} - The created style element.
-	 *
-	 * @test self.getStyle() instanceof HTMLStyleElement // true
-	 */
-    getStyle () {
-    	const style = document.createElement('style');
-    	let content = '';
+  /**
+ * Creates and returns a style element containing the CSS styles for highlights.
+ * @returns {HTMLStyleElement} - The created style element.
+ *
+ * @test self.getStyle() instanceof HTMLStyleElement // true
+ */
+  getStyle () {
+  	const style = document.createElement('style');
+  	let content = '';
 
-    	style.id = `highlights${this.suffix}`;
-    	this.palette.forEach ((color, key) => {
-    		content += `::highlight(${key}${this.suffix}) { color: ${color}}\n`;
-    	});
+  	style.id = `highlights${this.suffix}`;
+  	this.palette.forEach ((color, key) => {
+  		content += `::highlight(${key}${this.suffix}) { color: ${color}}\n`;
+  	});
 
-    	style.textContent = content;
-    	return style;
-    }
+  	style.textContent = content;
+  	return style;
+  }
 
-    /**
-	 * Removes the highlights associated with the specified type.
-	 *
-	 * @param {string} type 	The type of highlights to remove.
-	 *
-	 */
-    remove(type) {
-    	CSS.highlights.delete (type + this.suffix);
-    }
+  /**
+ * Removes the highlights associated with the specified type.
+ *
+ * @param {string} type 	The type of highlights to remove.
+ *
+ */
+  remove(type) {
+  	CSS.highlights.delete (type + this.suffix);
+  }
 
-    /**
-	 * Removes all highlights associated with the current suffix.
-	 *
-	 * @returns {string} 	The suffix used to identify highlights on an instance
-	 */
-    removeAll () {
-    	CSS.highlights.forEach ((highlight, name) => {
-    		if (name.endsWith(this.suffix)) {
-    			CSS.highlights.delete (name);
-    		}
-    	});
+  /**
+ * Removes all highlights associated with the current suffix.
+ *
+ * @returns {string} 	The suffix used to identify highlights on an instance
+ */
+  removeAll () {
+  	CSS.highlights.forEach ((highlight, name) => {
+  		if (name.endsWith(this.suffix)) {
+  			CSS.highlights.delete (name);
+  		}
+  	});
 
-    	return this.suffix;
-    }
+  	return this.suffix;
+  }
 
-    /**
-	 * Clears the CSS highlights registry.
-	 */
-    clearRegistry() {
-    	CSS.highlights.clear();
-    }
+  /**
+ * Clears the CSS highlights registry.
+ */
+  clearRegistry() {
+  	CSS.highlights.clear();
+  }
 
-    /**
-	 * Logs the entries in the CSS highlights registry to the console.
-	 */
-    logRegistry () {
-    	CSS.highlights.forEach ((highlight, name) => {
-    		console.log (name, highlight);
-    	})
-    }
+  /**
+ * Logs the entries in the CSS highlights registry to the console.
+ */
+  logRegistry () {
+  	CSS.highlights.forEach ((highlight, name) => {
+  		console.log (name, highlight);
+  	})
+  }
 
-    /**
-	 * Gets the color palette for the current instance.
-	 *
-	 * @test self.palette instanceof Map // true
-	 */
-    get palette () { return this.#palette || this.defaultColors;}
+  /**
+ * Gets the color palette for the current instance.
+ *
+ * @test self.palette instanceof Map // true
+ */
+  get palette () { return this.#palette || this.defaultColors;}
 
-    /**
-	 * Sets the palette for the current instance.
-	 *
-	 * @param {Array.<string>|Map.<string, string>|string} value - 	The palette data.
-	 *   - If an array is provided, it will be converted to a Map with key-value pairs.
-	 *   - If a Map is provided, it will be used directly.
-	 *   - If a string is provided, it will be parsed as JSON and converted to a Map (if valid).
-	 *   - If the value is null, undefined, or an empty string, the palette will be cleared.
-	 *
-	 * @throws {SyntaxError} If the provided string cannot be parsed as valid JSON.
-	 *
-	 * @test (self => { self.palette = null; return self.palette !== null})(self) // true
-	 * @test (self => { self.palette = [["property":"color"]]; return self.palette })(self) // self.palette instanceof Map
-	 * @test (self => {
-	        self.palette = new Map([["property", "color"]]);
-	        return self.palette instanceof Map;
-	  })(self) // true
-	  *
-	  * @test (self => {
-	         self.setAttribute('palette', '[["property", "color"]]');
-	         return self.palette instanceof Map;
-	   })(self) // true
-	  *
-	  * @test (self => {
-	  *       self.settAttribute('palette', '');
-	  *       return self.palette !== '';
-	  * })(self) // true
-	 */
-    set palette (value) {
-    	let map;
-    	const style = document.head.querySelector(`#highlights${this.suffix}`);
+  /**
+ * Sets the palette for the current instance.
+ *
+ * @param {Array.<string>|Map.<string, string>|string} value - 	The palette data.
+ *   - If an array is provided, it will be converted to a Map with key-value pairs.
+ *   - If a Map is provided, it will be used directly.
+ *   - If a string is provided, it will be parsed as JSON and converted to a Map (if valid).
+ *   - If the value is null, undefined, or an empty string, the palette will be cleared.
+ *
+ * @throws {SyntaxError} If the provided string cannot be parsed as valid JSON.
+ *
+ * @test (self => { self.palette = null; return self.palette !== null})(self) // true
+ * @test (self => { self.palette = [["property":"color"]]; return self.palette })(self) // self.palette instanceof Map
+ * @test (self => {
+        self.palette = new Map([["property", "color"]]);
+        return self.palette instanceof Map;
+  })(self) // true
+  *
+  * @test (self => {
+         self.setAttribute('palette', '[["property", "color"]]');
+         return self.palette instanceof Map;
+   })(self) // true
+  *
+  * @test (self => {
+  *       self.settAttribute('palette', '');
+  *       return self.palette !== '';
+  * })(self) // true
+ */
+  set palette (value) {
+  	let map;
+  	const style = document.head.querySelector(`#highlights${this.suffix}`);
 
-    	if (!value || value === '' || value === undefined) {
-    		this.#palette = null;
-    	} else if (Array.isArray (value)) {
-    		map = new Map(value);
-    	} else if (value instanceof Map) {
-    		map = value;
-    	} else {
-    		try {
-    			value = JSON.parse(value);
-    			map = new Map (value);
-    		} catch (error) {
-	    		console.error(error);
-    		}
-    	}
+  	if (!value || value === '' || value === undefined) {
+  		this.#palette = null;
+  	} else if (Array.isArray (value)) {
+  		map = new Map(value);
+  	} else if (value instanceof Map) {
+  		map = value;
+  	} else {
+  		try {
+  			value = JSON.parse(value);
+  			map = new Map (value);
+  		} catch (error) {
+    		console.error(error);
+  		}
+  	}
 
-    	this.#palette = map;
-    	const newStyle = this.getStyle();
-    	if (!style) {
-    		document.head.append (newStyle);
-    	} else {
-    		document.head.replaceChild(newStyle, style);
-    	}
-    }
+  	this.#palette = map;
+  	const newStyle = this.getStyle();
+  	if (!style) {
+  		document.head.append (newStyle);
+  	} else {
+  		document.head.replaceChild(newStyle, style);
+  	}
+  }
 }
 
 document.addEventListener('DOMContentLoaded', customElements.define('wijit-code', WijitCode));

@@ -24,6 +24,7 @@ export default {
 			test: (instance, value) => instance.highlighter instanceof Highlight,
 			values: [
 				["", false],
+				[true, false],
 				["false", false],
 				["html", true],
 				["./syntax.html.js", true]
@@ -36,9 +37,9 @@ export default {
 			test: (instance, value) => instance.shadowRoot.querySelector('pre').classList.contains('inline'),
 			values: [
 				[null, true],
-				["", true],
-				["true", true],
-				["false", false],
+				["html", true],
+				[true, true],
+				[false, false],
 				["foo", false],
 			]
 		},
