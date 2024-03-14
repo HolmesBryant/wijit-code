@@ -103,6 +103,7 @@ export default class WijitCode extends HTMLElement {
 				:host {
 					--indent: ${this.indent};
 					--line-number-color: gray;
+					--wrap: pre;
 					display: inline-block;
 					overflow-x: auto;
 					vertical-align: middle;
@@ -117,7 +118,7 @@ export default class WijitCode extends HTMLElement {
 					font-family: monospace;
 					margin: 0;
 					tab-size: var(--indent);
-					white-space: pre-wrap;
+					white-space: var(--wrap);
 				}
 
 				section {

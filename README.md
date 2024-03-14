@@ -4,6 +4,12 @@ A custom element for displaying code snippets with consistent formatting and opt
 
 Demo: [https://holmesbryant.github.io/wijit-code/](https://holmesbryant.github.io/wijit-code/)
 
+## Changelog
+- v1.01
+    - added 'scriptLoaded' event which fires on document when the full text of the script being tested has been loaded. This only occurs when lineNumbers is true (or the 'line-numbers' attribute is present).
+    - Changed the default white-space wrapping to 'pre' from 'pre-wrap'.
+    - Exposed css custom variable '--wrap' which affects white-space wrapping.
+
 ## Note ##
 
 This component makes use of some fairly modern features such as: Dynamic Imports and the CSS Custom Highlight API. If you must support older browsers, please test thoroughly before deploying. 
