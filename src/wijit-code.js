@@ -2,7 +2,7 @@
  * @class WijitCode
  * @extends HTMLElement
  * @description A custom element for displaying code snippets with consistent formatting and optional highlighting.
- * @author Holmes Bryant <webbmaastaa@gmail.com>
+ * @author Holmes Bryant <https://github.com/HolmesBryant>
  * @license GPL-3.0
  *
  *
@@ -66,7 +66,7 @@ export default class WijitCode extends HTMLElement {
 	 * @description The number of spaces to represent a tab character. Can use most css length values.
 	 * @comment Has public getter (indent)
 	 */
-	#indent = 4;
+	#indent = "1";
 
 	#lineNumbers = false;
 
@@ -300,10 +300,11 @@ export default class WijitCode extends HTMLElement {
 			// If elem is a textarea. This occurs when edit is enabled.
 			content = elem.value;
 		} else if (elem.firstElementChild && elem.firstElementChild.localName === 'textarea') {
-			// If user wrapped their code in a textarea (to prevent code execution)
-			// grab its contents and remove the textarea
+			// If user wrapped their code in a textarea (to prevent code execution) grab its contents and remove the textarea
+
 			ta = elem.querySelector ('textarea');
-			content = ta.value;
+			// Additional textareas (specifically, textarea closing tags) inside the main textarea wrapper cause the rendering engine to truncate the content, so users must either encode the slash in the extra closing tags, or escape the slash with a '\'. Here we can safely remove these backslashes.
+			content = ta.value.replace('<\\', '<');
 			ta.remove();
 		} else {
 			content = this.convertHTML(elem.innerHTML);

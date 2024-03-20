@@ -296,13 +296,34 @@
 		<div>
 			<header style="text-align:center">
 				<h3 style="margin-bottom:0">Prevent code execution</h3>
-				<span>(wrap code in textarea)</span>
+				<span>Wrap code in textarea (which will be removed before display)</span>
 			</header>
 			<wijit-code>
 				<textarea>
 					<wijit-code>
 						&lt;textarea>
 							<img src="false" onerror="alert('fubar!')">
+						&lt;/textarea>
+					</wijit-code>
+				</textarea>
+			</wijit-code>
+		</div>
+
+		<div>
+			<header style="text-align:center">
+				<h3 style="margin-bottom:0">
+					Nested Textareas
+				</h3>
+				<span>(escape slashes in nested closing tags with a backslash)</span>
+			</header>
+			<wijit-code>
+				<textarea>
+					<wijit-code>
+						&lt;textarea>
+							<img src="false" onerror="alert('fubar!')">
+							<textarea>
+								...
+							<\\/textarea>
 						&lt;/textarea>
 					</wijit-code>
 				</textarea>

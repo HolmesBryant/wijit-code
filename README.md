@@ -85,7 +85,7 @@ As of this writing (2024-02-04), Firefox requires you to set a custom flag in or
 		}
 	</wijit-code>
 
-If the code you wish to display contains self-executing javascript, or if you wish to display an html tag having each attribute on a seperate line, wrap your code in a textarea tag.
+If the code you wish to display contains self-executing elements, or if you wish to display an html tag with each attribute on a seperate line, wrap your code in a textarea.
 This will prevent the browser from interpreting your code.
 
 	<wijit-code>
@@ -94,13 +94,16 @@ This will prevent the browser from interpreting your code.
 		</textarea>
 	</wijit-code>
 
+**Important!**
+
+Additional textareas (specifically, textarea closing tags) inside the main textarea wrapper cause the rendering engine to truncate the content, so you must escape the slash in the closing tags of any extra textareas with a backslash. The component will remove these backslashes before displaying the code.
+
 	<wijit-code>
 		<textarea>
-			<p
-				id="foo"
-				class="bar">
-				some text
-			</p>
+			<img src="false" onerror="alert('foo!')">
+			<textarea class="textarea_code_to_display">
+				...
+			<\/textarea>
 		</textarea>
 	</wijit-code>
 
@@ -129,18 +132,20 @@ This will prevent the browser from interpreting your code.
 
 ### Providing a URL to the Highlighter ###
 
-	<wijit-code highlight="../path/to/syntax.my_syntax.js">...</wijit-code>
+	<wijit-code highlight="../path/to/syntax.my-syntax.js">...</wijit-code>
 
 ## Custom Color Palettes ##
 
 If you have enabled syntax highlighting, you may define custom color palettes via the "palette" attribute or by directly setting the palette property.
-You may define your palette as a two dimensional array of key => value pairs, a javascript Map or a JSON string representing a two dimensional map (regardless, the component will convert it into a Map).
+
+You may define your palette as a two dimensional array of key => value pairs, a JSON string representing a two dimensional array, or a javascript Map (regardless, the component will convert it into a Map).
+
 Each key should correspond to a property in the syntax definition file you are using.
 Each value should be a valid css color value.
 
-The default keys are "argument", "comment", "function", "keyword", "number", "operator", "string", "tag" and "variabe".
+The default keys are "argument", "comment", "function", "keyword", "number", "operator", "string", "tag" and "variable".
 
-Unless your syntax definition file adds new key words, you can just use the default keys. You do not have to include every key, the the properties/values are merged into the default scheme, so any keys you omit will take the default color.
+Unless your syntax definition file adds new key words, you can just use the default keys. You do not have to include every key, the properties/values are merged into the default scheme, so any keys you omit will take the default color.
 
 	// Array
 	customElements.whenDefined('wijit-code')
@@ -192,7 +197,8 @@ If "highlight" has a value of "html", the component looks for a file named "synt
 
 You may use your own syntax definitions by creating a syntax definition file.
 The default naming scheme for this file is "syntax.[language_name].js", so if you want to create a syntax file for Python, the file name would be "syntax.python.js".
-Even though the default location for this type of file is in the same directory as the wijit-code.js file, it is not mandatory to place your file there. You may place a definition file anywhere that can be imported by javascript, but if you do this, you must give the "highlight" attribute a path or url instead of a simple key word.
+
+Even though the default location for this type of file is in the same directory as the wijit-code.js file, it is not mandatory to place your file there. You may place a syntax definition file anywhere that can be imported by javascript, but if you do this, you must give the "highlight" attribute a path or url instead of a simple key word.
 
 A syntax definition file consists of a single exported object containing several properties. You must define this object as the default export.
 
@@ -210,7 +216,9 @@ A syntax definition file consists of a single exported object containing several
 	};
 
 Each property corresponds to a CSS Custom Highlight API css rule which is injected in a style tag into the head of the document.
+
 The default properties are the same as those desctribed in **Custom Color Palettes**.
+
 If you add a new property name, you must add a new color palette entry which includes the new property name and a color.
 
 	//syntax.example.js
@@ -277,6 +285,7 @@ Null is used when you want to include a property, but don't really have a use fo
 	}
 
 **It is important to note that the effect of each following item supercedes the effect of the previous one (depending, of course, on how the definitions are written).**
+
 In the following example, the "tag" definition will match everyting between and including angle brackets (including strings), but since the "string" definition follows it, any strings within the angle brackets will be colored according the the string color, not the tag color.
 
 	// example
@@ -302,4 +311,4 @@ Then a style tag is inserted into the head of the document containing a set of s
 		...
 	</style>
 
-[More information about the CSS Custom Highlight API](https://developer.mozilla.org/en-US/docs/Web/API/CSS_Custom_Highlight_API "More information about the CSS Custom Highlight API")
+[More information about the CSS Custom Highlight API](https://developer.mozilla.org/en-US/docs/Web/API/CSS_Custom_Highlight_API)
