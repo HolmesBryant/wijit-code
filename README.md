@@ -5,6 +5,11 @@ A custom element for displaying code snippets with consistent formatting and opt
 Demo: [https://holmesbryant.github.io/wijit-code/](https://holmesbryant.github.io/wijit-code/)
 
 ## Changelog
+- v1.2
+	- Adjusted html syntax so it also covers css
+	- Added html/css as default syntax so you don't have to provide a value to the "highlight" attribute if you are just displaying html/css.
+- v1.02
+    - Added "property" to default color palette for syntax-highlighting properties
 - v1.01
     - added 'scriptLoaded' event which fires on document when the full text of the script being tested has been loaded. This only occurs when lineNumbers is true (or the 'line-numbers' attribute is present).
     - Changed the default white-space wrapping to 'pre' from 'pre-wrap'.
@@ -21,12 +26,11 @@ As of this writing (2024-02-04), Firefox requires you to set a custom flag in or
 
 ## Features ##
 
-- Ensures consistent spacing within the code block, regardless of how the code was originally indented.
 - Removes any common leading whitespace from all lines to create a visually cleaner block.
 - Customize the amount of indentation within a code block.
 - Display the code inline or as a block.
 - Optional line numbers
-- Can highlight HTML or Javascript code out of the box.
+- Can highlight HTML/CSS code out of the box (without any external syntax definition files).
 - The highlighter does not inject any spans (or other elements) into your code.
 - Uses the CSS Custom Highlight API.
 - Define custom color palettes on a per-instance basis.
@@ -44,11 +48,12 @@ As of this writing (2024-02-04), Firefox requires you to set a custom flag in or
 	- Add this attribute to customize the degree of indentation.
 	  It will take an integer or a css length value such as 4px, 2rem etc.
 
-- **highlight** (default: false) | Acceptable values ['false', keyword, url]
+- **highlight** (default: "") | Acceptable values ["", "false", keyword, url]
 	- Add this attribute to highlight your code.
 	  The code which determines what text to highlight resides in its own "syntax" file named "syntax.[language].js".
 	  Ideally, this file should be located in the same directory as wijit-code.js.
 	  The value "false" will negate the effect, as if the attribute were not present at all.
+	  An empty string, or no value at all, will highlight the code using the default syntax (which is tuned for HTML/CSS).
 
 	  - **Keywords:** You can provide a simple keyword, such as "html" or "javascript".
    	    - The component will look for a file named "syntax.[keyword].js" in the **same folder** as wigit-code.js, and try to import it.
@@ -143,7 +148,7 @@ You may define your palette as a two dimensional array of key => value pairs, a 
 Each key should correspond to a property in the syntax definition file you are using.
 Each value should be a valid css color value.
 
-The default keys are "argument", "comment", "function", "keyword", "number", "operator", "string", "tag" and "variable".
+The default keys are listed in the example below.
 
 Unless your syntax definition file adds new key words, you can just use the default keys. You do not have to include every key, the properties/values are merged into the default scheme, so any keys you omit will take the default color.
 
@@ -156,10 +161,11 @@ Unless your syntax definition file adds new key words, you can just use the defa
 			[ "comment", "hsl(221, 12%, 69%)" ],
 			[ "function", "hsl(210, 50%, 60%)" ],
 			[ "keyword", "hsl(300, 30%, 68%)" ],
-			[ "number", "hsl(32, 93%, 66%)" ],
+			[ "number", "hsl(32, 93%, 50%)" ],
 			[ "operator", "red" ],
+			[ "property", "orchid" ],
 			[ "string", "hsl(114, 31%, 68%)" ],
-			[ "variable", "whitesmoke" ],
+			[ "variable", "darkkhaki" ],
 			[ "tag", "indianred" ]
 		];
 		// assign Array to palette
@@ -178,9 +184,10 @@ Unless your syntax definition file adds new key words, you can just use the defa
 		colors.set( "keyword", "purple" );
 		colors.set( "number", "darksalmon" );
 		colors.set( "operator", "darkred" );
+		colors.set( "property", "orchid" )
 		colors.set( "string", "darkgreen" );
 		colors.set( "tag", "olive" );
-		colors.set( "variable", "whitesmoke" )
+		colors.set( "variable", "darkkhaki" )
 		// assign Map to palette
 		instance.palette = colors;
 	});

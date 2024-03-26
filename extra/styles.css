@@ -6,25 +6,27 @@ body {
 	--border: silver;
 	--text: dimgray;
 
-    background: var(--bg1);
-    color: var(--text);
+  background: var(--bg1);
+  color: var(--text);
 	font-family: sans-serif;
 	font-size: 16px;
-    height: 100%;
-    letter-spacing: .1rem;
-    line-height: 1.5rem;
-    margin: auto;
+  height: 100%;
+  letter-spacing: .1rem;
+  line-height: 1.5rem;
+  margin: auto;
 	max-width: 1024px;
 	padding: 1rem;
+}
 
-    @media (prefers-color-scheme: dark) {
-    	--bg1: rgb(20, 20, 20);
+@media (prefers-color-scheme: dark) {
+	body {
+    --bg1: rgb(20, 20, 20);
 		--bg2: rgb(40,40,40);
 		--bg3: rgb(60, 60, 60);
 		--accent: gray;
 		--border: dimgray;
 		--text: rgb(240, 240, 240);
-    }
+	}
 }
 
 @media (max-width: 300px) {
@@ -36,31 +38,31 @@ body {
 /**** Backgrounds ****/
 
 	section,
-    summary
-    { background-color: var(--bg2) }
+  summary
+  { background-color: var(--bg2) }
 
 	button
 	{ background-color: var(--bg3) }
 
-    button:hover,
-    button.active-tab,
-    summary:hover,
-    details[open] > summary
-    { background-color: var(--accent) }
+  button:hover,
+  button.active-tab,
+  summary:hover,
+  details[open] > summary
+  { background-color: var(--accent) }
 
 /**** Borders ****/
 	button,
 	details
 	{ border: 1px solid var(--border); }
 
-    article,
-    details,
-    section,
-    summary
-    { border-radius: .5rem; }
+  article,
+  details,
+  section,
+  summary
+  { border-radius: .5rem; }
 
-    wijit-tabs button
-    { border-radius: .5rem .5rem 0 0 }
+  wijit-tabs button
+  { border-radius: .5rem .5rem 0 0 }
 
 /**** Text ****/
 	button

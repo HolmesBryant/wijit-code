@@ -7,7 +7,7 @@
 	<script type="module" src="src/wijit-code.js"></script>
 	<script type="module" src="extra/wijit-form.js"></script>
 	<script type="module" src="extra/wijit-tabs.js"></script>
-	<link rel="stylesheet" href="styles.css">
+	<link rel="stylesheet" href="extra/styles.css">
 
 	<style>
 		/*
@@ -175,6 +175,72 @@
 				line-numbers
 				highlight="html">
 					<textarea>
+						<style>
+							/**** A Comment ****/
+
+							/* Another
+								Comment */
+
+							body {
+								--var1: rgb(250, 250, 250);
+								--var2: #f2f2f2;
+								--var3: white;
+								--argument: hsl(32, 93%, 66%);
+
+							  background: var(--var1);
+								font-family: sans-serif;
+								font-size: 16px;
+							  height: 100%;
+							  letter-spacing: .1rem;
+								padding: 1rem;
+							}
+
+							@media (prefers-color-scheme: dark) {
+								body {
+							    --var1: rgb(20, 20, 20);
+								}
+
+								* { padding: 0; }
+							}
+
+							@media (max-width: 300px) {
+								* { padding: 0; }
+							}
+
+								section,
+							  summary
+							  { background-color: var(--bg2) }
+
+							  summary:hover,
+							  details[open] > summary
+							  {
+							  	background-image: linear-gradient(
+							  		to bottom,
+							  		#008000,
+							  		rgb(0, 128, 0) 0 10%,
+							  		rgba(0, 128, 0, 0.5) 10% 20%,
+							  		hsl(120, 100%, 25.098%) 30%,
+							  		hwb(120 0% 49.804%),
+							  		color(a98-rgb 0.28137 0.49802 0.11675),
+							  		lab(46.278 -47.552 48.586),
+							  		#333 50%
+							  	),
+							  	linear-gradient(336deg, rgba(0,0,255,.8), rgba(0,0,255,0) 70.71%);
+								}
+
+								section[data-foo="bar"] {
+									margin: 0 auto 1rem auto;
+									padding: 1rem;
+								}
+
+								div::before{
+									content: "*";
+								}
+
+								div::after {
+									content: "";
+								}
+						</style>
 						<!-- Comment -->
 						<!--A
 							multi-line
@@ -202,7 +268,7 @@
 								<option>2.5e3</option>
 								<option>1.2e-3</option>
 								<option>0x123</option>
-								<option>9.876E-9</option>
+								<option>9.876E9</option>
 								<option>0xFAF</option>
 							</datalist>
 						</div>
@@ -268,7 +334,21 @@
 		</div>
 
 		<div>
-			<header><h3>Highlight Code using Keyword</h3></header>
+			<header><h3>Highlight using Default Defs</h3></header>
+			<wijit-code id="editable" highlight>
+				<textarea>
+					<wijit-code highlight>
+						<article>
+							<h1>A Title</h1>
+							<p class="foo">Some text</p>
+						</article>
+					</wijit-code>
+				</textarea>
+			</wijit-code>
+		</div>
+
+		<div>
+			<header><h3>Highlight using Keyword</h3></header>
 			<wijit-code id="editable" highlight="html" edit>
 				<textarea>
 					<wijit-code highlight="html">
